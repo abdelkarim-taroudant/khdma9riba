@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>خدمة قريبة – الشغل فإقليم تارودانت</title>
+<meta name="description" content="خدمة قريبة: عروض الشغل فإقليم تارودانت. مشغلين وعمال فبلاصة وحدة.">
+<style>
+:root{--bg:#faf7f2;--card:#fff;--ink:#1d2a1f;--mute:#667064;--line:#e4ddd0;--acc:#1f7a4d;--acc2:#e9f4ee;--warn:#c2410c;--warnbg:#fff1e8;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root{--bg:#121712;--card:#1b231c;--ink:#eef2ec;--mute:#9aa597;--line:#2c382d;--acc:#4cc38a;--acc2:#1e2f25;--warn:#fb923c;--warnbg:#33231a;color-scheme:dark}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",Tahoma,Arial,sans-serif;line-height:1.55}
+.wrap{max-width:720px;margin:0 auto;padding:16px}
+h1{margin:0;font-size:26px}
+.sub{color:var(--mute);margin:2px 0 14px;font-size:14px}
+.bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+select,input,textarea{font:inherit;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px;width:100%}
+.bar select{flex:1;min-width:130px}
+button{font:inherit;cursor:pointer;border:0;border-radius:10px;padding:10px 14px;background:var(--acc);color:#fff;font-weight:600}
+button.ghost{background:var(--acc2);color:var(--acc)}
+button:disabled{opacity:.6}
+button.big{width:100%;margin-bottom:14px;padding:13px}
+.job{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:10px}
+.pic{height:84px;border-radius:10px;margin-bottom:10px;display:flex;align-items:center;justify-content:center;font-size:44px;letter-spacing:8px}
+.job h3{margin:0 0 6px;font-size:17px}
+.tags{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px}
+.tag{font-size:12px;padding:2px 9px;border-radius:99px;background:var(--acc2);color:var(--acc)}
+.tag.u{background:var(--warnbg);color:var(--warn)}
+.job p{margin:4px 0 10px;color:var(--mute);font-size:14px;white-space:pre-wrap}
+a.wa{display:inline-block;background:var(--acc);color:#fff;text-decoration:none;padding:9px 14px;border-radius:10px;font-weight:600;font-size:14px}
+.empty{text-align:center;color:var(--mute);padding:30px 10px}
+#form{display:none;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:14px}
+#form label{display:block;font-size:13px;color:var(--mute);margin:10px 0 4px}
+.row{display:flex;gap:8px;justify-content:space-between;margin-top:12px}
+.note{font-size:12px;color:var(--mute);margin-top:14px;text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>💼 خدمة قريبة</h1>
+  <div class="sub">Travail · الشغل فإقليم تارودانت · مشغلين وعمال فبلاصة وحدة</div>
+
+  <button class="big" id="toggle">➕ نشر عرض خدمة (للمشغلين)</button>
+
+  <div id="form">
+    <label>عنوان العرض</label><input id="f_title" maxlength="80" placeholder="مثال: خاص بناي ماهر">
+    <label>المهنة</label><select id="f_trade"></select>
+    <label>المدينة / الجماعة</label><select id="f_city"></select>
+    <label>الأجر (اختياري)</label><input id="f_pay" maxlength="40" placeholder="مثال: 150 درهم فاليوم">
+    <label>رقم الواتساب</label><input id="f_phone" inputmode="tel" dir="ltr" placeholder="06XXXXXXXX">
+    <label>تفاصيل</label><textarea id="f_desc" rows="3" maxlength="400" placeholder="شحال من يوم، فين بالضبط، شنو خاص يعرف..."></textarea>
+    <label style="display:flex;gap:8px;align-items:center"><input type="checkbox" id="f_urgent" style="width:auto"> خدمة مستعجلة (اليوم / غدا)</label>
+    <div class="row"><button id="send">نشر</button><button class="ghost" id="cancel">إلغاء</button></div>
+  </div>
+
+  <div class="bar"><select id="q_city"></select><select id="q_trade"></select></div>
+  <div id="list"><div class="empty">...جاري التحميل</div></div>
+  <div class="note" id="note"></div>
+</div>
+
+<script>
+var SUPABASE_URL="https://lfbyuqhklvnezsucxrza.supabase.co";
+var SUPABASE_KEY="sb_publishable_Z5OfxTRG2GHkz-pRg03pOQ_ixNG-BlC";
+var H={apikey:SUPABASE_KEY,Authorization:"Bearer "+SUPABASE_KEY,"Content-Type":"application/json"};
+
+var CITIES=["تارودانت","أولاد تايمة","إيغرم","أولاد برحيل","أولوز","تالوين","جماعة أخرى"];
+var TRADES=["فلاحة (جني، سقي، حراسة)","بناء","كهرباء","سباكة","صباغة","نجارة","سياقة","تجارة وبيع","مطعم وطبخ","نظافة","صناعة تقليدية","أخرى"];
+var ICONS={"فلاحة (جني، سقي، حراسة)":["🍊🌾🚜","rgba(120,170,40,.22)"],"بناء":["🧱🏗️👷","rgba(200,130,50,.22)"],"كهرباء":["💡🔌⚡","rgba(240,190,30,.22)"],"سباكة":["🔧🚰🛁","rgba(60,140,220,.22)"],"صباغة":["🎨🖌️🏠","rgba(220,80,120,.22)"],"نجارة":["🪚🪵🚪","rgba(150,100,60,.22)"],"سياقة":["🚚🚗🛣️","rgba(100,110,130,.22)"],"تجارة وبيع":["🛒🏪💳","rgba(150,80,200,.22)"],"مطعم وطبخ":["🍲🥘🍽️","rgba(230,100,50,.22)"],"نظافة":["🧹🧼✨","rgba(40,180,170,.22)"],"صناعة تقليدية":["🏺🧵🪡","rgba(190,80,60,.22)"]};
+var jobs=[];
+
+function $(i){return document.getElementById(i)}
+function fill(sel,arr,all){sel.innerHTML="";if(all){var o=document.createElement("option");o.value="";o.textContent=all;sel.appendChild(o)}arr.forEach(function(t){var o=document.createElement("option");o.value=t;o.textContent=t;sel.appendChild(o)})}
+function el(t,c,x){var e=document.createElement(t);if(c)e.className=c;if(x!=null)e.textContent=x;return e}
+function wa(p){var d=String(p).replace(/\D/g,"");if(d.indexOf("00")===0)d=d.slice(2);else if(d.charAt(0)==="0")d="212"+d.slice(1);return d}
+
+fill($("f_trade"),TRADES);fill($("f_city"),CITIES);
+fill($("q_city"),CITIES,"كل المدن");fill($("q_trade"),TRADES,"كل المهن");
+
+function render(){
+  var c=$("q_city").value,t=$("q_trade").value,L=$("list");L.innerHTML="";
+  var f=jobs.filter(function(j){return(!c||j.city===c)&&(!t||j.trade===t)});
+  f.sort(function(a,b){return(b.urgent?1:0)-(a.urgent?1:0)||(new Date(b.created_at))-(new Date(a.created_at))});
+  if(!f.length){L.appendChild(el("div","empty","ما كاين حتى عرض دابا. كن أول واحد كينشر! 👆"));return}
+  f.forEach(function(j){
+    var d=el("div","job"),ic=ICONS[j.trade]||["💼🤝📋","rgba(100,140,100,.22)"];
+    var pc=el("div","pic",ic[0]);pc.style.background=ic[1];d.appendChild(pc);
+    d.appendChild(el("h3",0,j.title));
+    var g=el("div","tags");
+    if(j.urgent)g.appendChild(el("span","tag u","🔥 مستعجل"));
+    g.appendChild(el("span","tag","📍 "+j.city));g.appendChild(el("span","tag",j.trade));
+    if(j.pay)g.appendChild(el("span","tag","💰 "+j.pay));
+    d.appendChild(g);
+    if(j.description)d.appendChild(el("p",0,j.description));
+    var a=el("a","wa","تواصل بالواتساب");
+    a.href="https://wa.me/"+wa(j.phone);a.target="_blank";a.rel="noopener";
+    a.onclick=function(){
+      fetch(SUPABASE_URL+"/rest/v1/rpc/add_click",{method:"POST",headers:H,body:JSON.stringify({job_id:j.id}),keepalive:true}).catch(function(){})
+    };
+    d.appendChild(a);L.appendChild(d)
+  })
+}
+
+function load(){
+  fetch(SUPABASE_URL+"/rest/v1/jobs?select=id,title,trade,city,pay,phone,description,urgent,created_at&order=created_at.desc&limit=200",{headers:H})
+  .then(function(r){if(!r.ok)throw 0;return r.json()})
+  .then(function(d){jobs=d;render()})
+  .catch(function(){$("list").innerHTML="";$("list").appendChild(el("div","empty","وقع مشكل فالتحميل، عاود حدث الصفحة."))})
+}
+
+$("toggle").onclick=function(){$("form").style.display="block";$("toggle").style.display="none"};
+$("cancel").onclick=function(){$("form").style.display="none";$("toggle").style.display="block"};
+$("send").onclick=function(){
+  var j={title:$("f_title").value.trim(),trade:$("f_trade").value,city:$("f_city").value,pay:$("f_pay").value.trim(),phone:$("f_phone").value.trim(),description:$("f_desc").value.trim(),urgent:$("f_urgent").checked};
+  if(!j.title||wa(j.phone).length<10){alert("كتب العنوان ورقم واتساب صحيح");return}
+  var b=$("send");b.disabled=true;
+  fetch(SUPABASE_URL+"/rest/v1/jobs",{method:"POST",headers:Object.assign({Prefer:"return=minimal"},H),body:JSON.stringify(j)})
+  .then(function(r){if(!r.ok)throw 0;
+    ["f_title","f_pay","f_phone","f_desc"].forEach(function(i){$(i).value=""});$("f_urgent").checked=false;
+    $("cancel").onclick();load();
+    $("note").textContent="تم النشر ✅"})
+  .catch(function(){alert("وقع مشكل فالنشر، عاود المحاولة")})
+  .then(function(){b.disabled=false})
+};
+$("q_city").onchange=$("q_trade").onchange=render;
+load();
+</script>
+</body>
+</html>
