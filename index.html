@@ -28,6 +28,7 @@ button.big{width:100%;margin-bottom:14px;padding:13px}
 .tag.u{background:var(--warnbg);color:var(--warn)}
 .job p{margin:4px 0 10px;color:var(--mute);font-size:14px;white-space:pre-wrap}
 a.wa{display:inline-block;background:var(--acc);color:#fff;text-decoration:none;padding:9px 14px;border-radius:10px;font-weight:600;font-size:14px}
+.map{background:var(--acc2);color:var(--acc);margin-inline-end:8px}
 .empty{text-align:center;color:var(--mute);padding:30px 10px}
 #form{display:none;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:14px}
 #form label{display:block;font-size:13px;color:var(--mute);margin:10px 0 4px}
@@ -48,6 +49,7 @@ a.wa{display:inline-block;background:var(--acc);color:#fff;text-decoration:none;
     <label>المدينة / الجماعة</label><select id="f_city"></select>
     <label>الأجر (اختياري)</label><input id="f_pay" maxlength="40" placeholder="مثال: 150 درهم فاليوم">
     <label>رقم الواتساب</label><input id="f_phone" inputmode="tel" dir="ltr" placeholder="06XXXXXXXX">
+    <label>موقع العمل (رابط Google Maps، اختياري)</label><input id="f_loc" dir="ltr" placeholder="https://maps.app.goo.gl/...">
     <label>تفاصيل</label><textarea id="f_desc" rows="3" maxlength="400" placeholder="شحال من يوم، فين بالضبط، شنو خاص يعرف..."></textarea>
     <label style="display:flex;gap:8px;align-items:center"><input type="checkbox" id="f_urgent" style="width:auto"> خدمة مستعجلة (اليوم / غدا)</label>
     <div class="row"><button id="send">نشر</button><button class="ghost" id="cancel">إلغاء</button></div>
@@ -63,7 +65,7 @@ var SUPABASE_URL="https://lfbyuqhklvnezsucxrza.supabase.co";
 var SUPABASE_KEY="sb_publishable_Z5OfxTRG2GHkz-pRg03pOQ_ixNG-BlC";
 var H={apikey:SUPABASE_KEY,Authorization:"Bearer "+SUPABASE_KEY,"Content-Type":"application/json"};
 
-var CITIES=["تارودانت","أولاد تايمة","إيغرم","أولاد برحيل","أولوز","تالوين","جماعة أخرى"];
+var CITIES=["تارودانت","أولاد تايمة","إيغرم","أولاد برحيل","أولوز","تالوين","سيدي وعزيز","جماعة أخرى"];
 var TRADES=["فلاحة (جني، سقي، حراسة)","بناء","كهرباء","سباكة","صباغة","نجارة","سياقة","تجارة وبيع","مطعم وطبخ","نظافة","صناعة تقليدية","أخرى"];
 var ICONS={"فلاحة (جني، سقي، حراسة)":["🍊🌾🚜","rgba(120,170,40,.22)"],"بناء":["🧱🏗️👷","rgba(200,130,50,.22)"],"كهرباء":["💡🔌⚡","rgba(240,190,30,.22)"],"سباكة":["🔧🚰🛁","rgba(60,140,220,.22)"],"صباغة":["🎨🖌️🏠","rgba(220,80,120,.22)"],"نجارة":["🪚🪵🚪","rgba(150,100,60,.22)"],"سياقة":["🚚🚗🛣️","rgba(100,110,130,.22)"],"تجارة وبيع":["🛒🏪💳","rgba(150,80,200,.22)"],"مطعم وطبخ":["🍲🥘🍽️","rgba(230,100,50,.22)"],"نظافة":["🧹🧼✨","rgba(40,180,170,.22)"],"صناعة تقليدية":["🏺🧵🪡","rgba(190,80,60,.22)"]};
 var jobs=[];
@@ -73,6 +75,7 @@ function fill(sel,arr,all){sel.innerHTML="";if(all){var o=document.createElement
 function el(t,c,x){var e=document.createElement(t);if(c)e.className=c;if(x!=null)e.textContent=x;return e}
 function wa(p){var d=String(p).replace(/\D/g,"");if(d.indexOf("00")===0)d=d.slice(2);else if(d.charAt(0)==="0")d="212"+d.slice(1);return d}
 
+function okMap(u){return /^https:\/\/(maps\.app\.goo\.gl|goo\.gl\/maps|(www\.)?google\.[a-z.]+\/maps|maps\.google\.[a-z.]+)\//i.test(u)}
 fill($("f_trade"),TRADES);fill($("f_city"),CITIES);
 fill($("q_city"),CITIES,"كل المدن");fill($("q_trade"),TRADES,"كل المهن");
 
@@ -91,6 +94,7 @@ function render(){
     if(j.pay)g.appendChild(el("span","tag","💰 "+j.pay));
     d.appendChild(g);
     if(j.description)d.appendChild(el("p",0,j.description));
+    if(j.location_url&&okMap(j.location_url)){var m=el("a","wa map","📍 موقع العمل");m.href=j.location_url;m.target="_blank";m.rel="noopener noreferrer";d.appendChild(m)}
     var a=el("a","wa","تواصل بالواتساب");
     a.href="https://wa.me/"+wa(j.phone);a.target="_blank";a.rel="noopener";
     a.onclick=function(){
@@ -101,7 +105,7 @@ function render(){
 }
 
 function load(){
-  fetch(SUPABASE_URL+"/rest/v1/jobs?select=id,title,trade,city,pay,phone,description,urgent,created_at&order=created_at.desc&limit=200",{headers:H})
+  fetch(SUPABASE_URL+"/rest/v1/jobs?select=id,title,trade,city,pay,phone,description,urgent,location_url,created_at&order=created_at.desc&limit=200",{headers:H})
   .then(function(r){if(!r.ok)throw 0;return r.json()})
   .then(function(d){jobs=d;render()})
   .catch(function(){$("list").innerHTML="";$("list").appendChild(el("div","empty","وقع مشكل فالتحميل، عاود حدث الصفحة."))})
@@ -110,14 +114,15 @@ function load(){
 $("toggle").onclick=function(){$("form").style.display="block";$("toggle").style.display="none"};
 $("cancel").onclick=function(){$("form").style.display="none";$("toggle").style.display="block"};
 $("send").onclick=function(){
-  var j={title:$("f_title").value.trim(),trade:$("f_trade").value,city:$("f_city").value,pay:$("f_pay").value.trim(),phone:$("f_phone").value.trim(),description:$("f_desc").value.trim(),urgent:$("f_urgent").checked};
+  var j={title:$("f_title").value.trim(),trade:$("f_trade").value,city:$("f_city").value,pay:$("f_pay").value.trim(),phone:$("f_phone").value.trim(),description:$("f_desc").value.trim(),urgent:$("f_urgent").checked,location_url:$("f_loc").value.trim()||null};
   if(!j.title||wa(j.phone).length<10){alert("كتب العنوان ورقم واتساب صحيح");return}
+  if(j.location_url&&!okMap(j.location_url)){alert("رابط الموقع خاصو يكون رابط Google Maps");return}
   var b=$("send");b.disabled=true;
   fetch(SUPABASE_URL+"/rest/v1/jobs",{method:"POST",headers:Object.assign({Prefer:"return=minimal"},H),body:JSON.stringify(j)})
   .then(function(r){if(!r.ok)throw 0;
-    ["f_title","f_pay","f_phone","f_desc"].forEach(function(i){$(i).value=""});$("f_urgent").checked=false;
-    $("cancel").onclick();load();
-    $("note").textContent="تم النشر ✅"})
+    ["f_title","f_pay","f_phone","f_desc","f_loc"].forEach(function(i){$(i).value=""});$("f_urgent").checked=false;
+    $("cancel").onclick();
+    $("note").textContent="تم الإرسال ✅ غادي يبان العرض ملي نراجعوه ونوافقو عليه"})
   .catch(function(){alert("وقع مشكل فالنشر، عاود المحاولة")})
   .then(function(){b.disabled=false})
 };
