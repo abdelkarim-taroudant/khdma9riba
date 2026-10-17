@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<title>إدارة خدمة قريبة</title>
+<style>
+:root{--bg:#faf7f2;--card:#fff;--ink:#1d2a1f;--mute:#667064;--line:#e4ddd0;--acc:#1f7a4d;--acc2:#e9f4ee;--warn:#c2410c;--warnbg:#fff1e8;--red:#b91c1c;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root{--bg:#121712;--card:#1b231c;--ink:#eef2ec;--mute:#9aa597;--line:#2c382d;--acc:#4cc38a;--acc2:#1e2f25;--warn:#fb923c;--warnbg:#33231a;--red:#f87171;color-scheme:dark}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",Tahoma,Arial,sans-serif;line-height:1.5}
+.wrap{max-width:720px;margin:0 auto;padding:16px}
+h1{margin:0 0 12px;font-size:22px}
+input{font:inherit;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px;width:100%;margin-bottom:10px}
+button{font:inherit;cursor:pointer;border:0;border-radius:10px;padding:9px 13px;background:var(--acc);color:#fff;font-weight:600}
+button.g{background:var(--acc2);color:var(--acc)}
+button.r{background:transparent;color:var(--red);border:1px solid var(--red)}
+.sum{display:flex;gap:8px;margin-bottom:12px}
+.sum div{flex:1;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px;text-align:center;font-size:13px;color:var(--mute)}
+.sum b{display:block;font-size:22px;color:var(--ink)}
+.tabs{display:flex;gap:6px;margin-bottom:12px}
+.tabs button{flex:1;background:var(--card);color:var(--mute);border:1px solid var(--line)}
+.tabs button.on{background:var(--acc);color:#fff;border-color:var(--acc)}
+.job{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px;margin-bottom:10px}
+.job h3{margin:0 0 6px;font-size:16px}
+.tags{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
+.tag{font-size:12px;padding:2px 9px;border-radius:99px;background:var(--acc2);color:var(--acc)}
+.tag.p{background:var(--warnbg);color:var(--warn)}
+.job p{margin:4px 0 8px;color:var(--mute);font-size:14px;white-space:pre-wrap}
+.row{display:flex;gap:8px;flex-wrap:wrap}
+.empty{text-align:center;color:var(--mute);padding:30px 10px}
+.err{color:var(--red);font-size:14px;margin:6px 0}
+#app{display:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>🔒 إدارة خدمة قريبة</h1>
+
+  <div id="login">
+    <input id="em" type="email" dir="ltr" placeholder="الإيميل" autocomplete="username">
+    <input id="pw" type="password" dir="ltr" placeholder="كلمة السر" autocomplete="current-password">
+    <button id="go" style="width:100%">دخول</button>
+    <div class="err" id="lerr"></div>
+  </div>
+
+  <div id="app">
+    <div class="sum"><div><b id="s_all">0</b>العروض</div><div><b id="s_pend">0</b>قيد المراجعة</div><div><b id="s_clk">0</b>مجموع الضغطات</div></div>
+    <div class="tabs"><button data-f="pending" class="on">قيد المراجعة</button><button data-f="live">منشورة</button><button data-f="all">الكل</button></div>
+    <div id="list"></div>
+    <button class="g" id="out" style="width:100%;margin-top:6px">خروج</button>
+  </div>
+</div>
+
+<script>
+var BASE="https://lfbyuqhklvnezsucxrza.supabase.co";
+var KEY="sb_publishable_Z5OfxTRG2GHkz-pRg03pOQ_ixNG-BlC";
+var token=null,jobs=[],filter="pending";
+function $(i){return document.getElementById(i)}
+function el(t,c,x){var e=document.createElement(t);if(c)e.className=c;if(x!=null)e.textContent=x;return e}
+function api(path,opt){opt=opt||{};opt.headers=Object.assign({apikey:KEY,Authorization:"Bearer "+(token||KEY),"Content-Type":"application/json"},opt.headers||{});return fetch(BASE+path,opt)}
+function wa(p){var d=String(p).replace(/\D/g,"");if(d.charAt(0)==="0")d="212"+d.slice(1);return d}
+
+function showApp(){$("login").style.display="none";$("app").style.display="block";load()}
+function logout(){token=null;try{sessionStorage.removeItem("t")}catch(e){}$("app").style.display="none";$("login").style.display="block"}
+
+$("go").onclick=function(){
+  $("lerr").textContent="";
+  api("/auth/v1/token?grant_type=password",{method:"POST",body:JSON.stringify({email:$("em").value.trim(),password:$("pw").value})})
+  .then(function(r){return r.json()})
+  .then(function(d){if(!d.access_token)throw 0;token=d.access_token;try{sessionStorage.setItem("t",token)}catch(e){}$("pw").value="";showApp()})
+  .catch(function(){$("lerr").textContent="الإيميل ولا كلمة السر غالطين"})
+};
+$("out").onclick=logout;
+
+function load(){
+  api("/rest/v1/jobs?select=*&order=created_at.desc&limit=500")
+  .then(function(r){if(r.status===401){logout();throw 0}return r.json()})
+  .then(function(d){jobs=d;render()}).catch(function(){})
+}
+function setApproved(id,v){api("/rest/v1/jobs?id=eq."+id,{method:"PATCH",headers:{Prefer:"return=minimal"},body:JSON.stringify({approved:v})}).then(load)}
+function del(id){if(!confirm("تمسح هاد العرض نهائيا؟"))return;api("/rest/v1/jobs?id=eq."+id,{method:"DELETE",headers:{Prefer:"return=minimal"}}).then(load)}
+
+function render(){
+  var pend=jobs.filter(function(j){return!j.approved}).length,clk=0;
+  jobs.forEach(function(j){clk+=j.clicks||0});
+  $("s_all").textContent=jobs.length;$("s_pend").textContent=pend;$("s_clk").textContent=clk;
+  var L=$("list");L.innerHTML="";
+  var f=jobs.filter(function(j){return filter==="all"||(filter==="pending"?!j.approved:j.approved)});
+  if(!f.length){L.appendChild(el("div","empty","ما كاين حتى عرض هنا"));return}
+  f.forEach(function(j){
+    var d=el("div","job");d.appendChild(el("h3",0,j.title));
+    var g=el("div","tags");
+    g.appendChild(el("span","tag"+(j.approved?"":" p"),j.approved?"منشور":"قيد المراجعة"));
+    g.appendChild(el("span","tag","📍 "+j.city));g.appendChild(el("span","tag",j.trade));
+    if(j.pay)g.appendChild(el("span","tag","💰 "+j.pay));
+    g.appendChild(el("span","tag","👆 "+(j.clicks||0)+" ضغطة"));
+    d.appendChild(g);
+    if(j.description)d.appendChild(el("p",0,j.description));
+    d.appendChild(el("p",0,"📞 "+j.phone));
+    var r=el("div","row");
+    if(j.approved){var h=el("button","g","إخفاء");h.onclick=function(){setApproved(j.id,false)};r.appendChild(h)}
+    else{var a=el("button",0,"✅ موافقة");a.onclick=function(){setApproved(j.id,true)};r.appendChild(a)}
+    var w=el("a");w.href="https://wa.me/"+wa(j.phone);w.target="_blank";w.rel="noopener";
+    var wb=el("button","g","واتساب");wb.onclick=function(){window.open(w.href,"_blank","noopener")};r.appendChild(wb);
+    if(j.location_url&&/^https:\/\//.test(j.location_url)){var mb=el("button","g","📍 الموقع");mb.onclick=function(){window.open(j.location_url,"_blank","noopener")};r.appendChild(mb)}
+    var x=el("button","r","حذف");x.onclick=function(){del(j.id)};r.appendChild(x);
+    d.appendChild(r);L.appendChild(d)
+  })
+}
+Array.prototype.forEach.call(document.querySelectorAll(".tabs button"),function(b){
+  b.onclick=function(){filter=b.getAttribute("data-f");Array.prototype.forEach.call(document.querySelectorAll(".tabs button"),function(x){x.className=x===b?"on":""});render()}
+});
+try{token=sessionStorage.getItem("t")}catch(e){}
+if(token)showApp();
+</script>
+</body>
+</html>
