@@ -60,7 +60,6 @@ var BASE="https://lfbyuqhklvnezsucxrza.supabase.co";
 var KEY="sb_publishable_Z5OfxTRG2GHkz-pRg03pOQ_ixNG-BlC";
 var token=null,jobs=[],filter="pending";
 function $(i){return document.getElementById(i)}
-var PH=BASE+"/storage/v1/object/public/job-photos/";
 function el(t,c,x){var e=document.createElement(t);if(c)e.className=c;if(x!=null)e.textContent=x;return e}
 function api(path,opt){opt=opt||{};opt.headers=Object.assign({apikey:KEY,Authorization:"Bearer "+(token||KEY),"Content-Type":"application/json"},opt.headers||{});return fetch(BASE+path,opt)}
 function wa(p){var d=String(p).replace(/\D/g,"");if(d.charAt(0)==="0")d="212"+d.slice(1);return d}
@@ -131,7 +130,7 @@ function render(){
   var f=jobs.filter(function(j){return filter==="all"||(filter==="pending"?!j.approved:j.approved)});
   if(!f.length){L.appendChild(el("div","empty","ما كاين حتى عرض هنا"));return}
   f.forEach(function(j){
-    var d=el("div","job");if(typeof j.photo_url==="string"&&j.photo_url.indexOf(PH)===0){var im=el("img","ph");im.src=j.photo_url;im.alt="";im.loading="lazy";d.appendChild(im)}d.appendChild(el("h3",0,j.title));
+    var d=el("div","job");d.appendChild(el("h3",0,j.title));
     var g=el("div","tags");
     g.appendChild(el("span","tag"+(j.approved?"":" p"),j.approved?"منشور":"قيد المراجعة"));
     if(j.employer_name)g.appendChild(el("span","tag","🏢 "+j.employer_name));g.appendChild(el("span","tag","📍 "+j.city));g.appendChild(el("span","tag",j.trade));
