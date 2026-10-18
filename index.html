@@ -33,6 +33,7 @@ a.map{display:inline-block;background:var(--acc2);color:var(--acc);text-decorati
 .app{border-top:1px solid var(--line);padding:8px 0;margin-top:8px;font-size:14px}
 .app a{color:var(--acc);font-weight:600}
 .hd{display:flex;gap:10px;align-items:center;cursor:pointer}.ico{width:46px;height:46px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:24px;flex:none}.hd .tx{flex:1;min-width:0}.hd h3{margin:0 0 4px;font-size:16px}.hd .tags{margin:0}.chev{color:var(--mute);font-size:18px;transition:transform .2s}.job.open .chev{transform:rotate(180deg)}.more{display:none;margin-top:10px}.job.open .more{display:block}
+.ico img{width:100%;height:100%;object-fit:cover;border-radius:12px}img.ph{width:100%;max-height:240px;object-fit:cover;border-radius:12px;margin-bottom:10px}
 .empty{text-align:center;color:var(--mute);padding:30px 10px}
 .ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);align-items:center;justify-content:center;padding:16px;z-index:9}
 .dlg{background:var(--card);border-radius:16px;padding:16px;width:100%;max-width:460px;max-height:90vh;overflow:auto}
@@ -76,6 +77,13 @@ function fill(sel,arr,all){sel.innerHTML="";if(all)sel.appendChild(el("option",0
 function prof(){try{return JSON.parse(localStorage.getItem("pf"))||{}}catch(e){return{}}}
 function setProf(p){try{localStorage.setItem("pf",JSON.stringify(p))}catch(e){}}
 
+var PH=B+"/storage/v1/object/public/job-photos/";
+function okPh(u){return typeof u==="string"&&u.indexOf(PH)===0}
+function shrink(file){return new Promise(function(res,rej){var u=URL.createObjectURL(file),im=new Image();im.onload=function(){var w=im.width,h=im.height,k=Math.min(1,1000/Math.max(w,h)),c=document.createElement("canvas");c.width=Math.round(w*k);c.height=Math.round(h*k);c.getContext("2d").drawImage(im,0,0,c.width,c.height);URL.revokeObjectURL(u);c.toBlob(function(b){b?res(b):rej()},"image/jpeg",.8)};im.onerror=rej;im.src=u})}
+function upPhoto(file){return shrink(file).then(function(bl){var path=S.user.id+"/"+Date.now()+".jpg";
+  function go(re){return fetch(B+"/storage/v1/object/job-photos/"+path,{method:"POST",headers:{apikey:K,Authorization:"Bearer "+S.access_token,"Content-Type":"image/jpeg"},body:bl}).then(function(r){if(r.status===401&&!re)return refresh().then(function(){return go(1)});if(!r.ok)throw 0;return PH+path})}
+  return go()})}
+
 /* ---------- API + auth ---------- */
 function save(s){S=s;try{if(s)localStorage.setItem("s",JSON.stringify(s));else localStorage.removeItem("s")}catch(e){}}
 function hdr(x){var h={apikey:K,Authorization:"Bearer "+(S?S.access_token:K),"Content-Type":"application/json"};for(var k in x)h[k]=x[k];return h}
@@ -99,8 +107,8 @@ function dialog(title,fields,btns){
     var i;
     if(f.t==="select"){i=document.createElement("select");f.o.forEach(function(x){var o=el("option",0,x);o.value=x;i.appendChild(o)})}
     else if(f.t==="area"){i=document.createElement("textarea");i.rows=3}
-    else{i=document.createElement("input");i.type=f.t||"text"}
-    if(f.p)i.placeholder=f.p;if(f.d)i.dir="ltr";if(f.m)i.maxLength=f.m;if(f.v)i.value=f.v;
+    else{i=document.createElement("input");i.type=f.t||"text";if(f.t==="file")i.accept="image/*"}
+    if(f.p)i.placeholder=f.p;if(f.mx)i.max=f.mx;if(f.d)i.dir="ltr";if(f.m)i.maxLength=f.m;if(f.v)i.value=f.v;
     ins[f.k]=i;
     if(f.t==="checkbox"){var w=el("label","chk");w.appendChild(i);w.appendChild(document.createTextNode(f.l));d.appendChild(w)}
     else{d.appendChild(el("label",0,f.l));d.appendChild(i)}
@@ -108,7 +116,7 @@ function dialog(title,fields,btns){
   var er=el("div","err");d.appendChild(er);var r=el("div","row");
   btns.forEach(function(b){
     var x=el("button",b.c||"",b.t);
-    x.onclick=function(){var v={};for(var k in ins)v[k]=ins[k].type==="checkbox"?ins[k].checked:ins[k].value.trim();er.textContent="";b.f(v,function(m){er.textContent=m},closeD)};
+    x.onclick=function(){var v={};for(var k in ins)v[k]=ins[k].type==="checkbox"?ins[k].checked:ins[k].type==="file"?ins[k].files[0]:ins[k].value.trim();er.textContent="";b.f(v,function(m){er.textContent=m},closeD)};
     r.appendChild(x)});
   d.appendChild(r);$("ov").style.display="flex"}
 
@@ -144,15 +152,16 @@ function render(){
   if(!f.length){L.appendChild(el("div","empty","ما كاين حتى عرض دابا. كن أول واحد كينشر! 👆"));return}
   f.forEach(function(j){
     var d=el("div","job"),ic=ICONS[j.trade]||["💼","rgba(100,140,100,.22)"];
-    var hd=el("div","hd"),co=el("div","ico",Array.from(ic[0])[0]);co.style.background=ic[1];
+    var hd=el("div","hd"),co=el("div","ico",Array.from(ic[0])[0]);co.style.background=ic[1];if(okPh(j.photo_url)){co.textContent="";var th=el("img");th.src=j.photo_url;th.alt="";co.appendChild(th)}
     var tx=el("div","tx");tx.appendChild(el("h3",0,j.title));
     var g=el("div","tags");
+    if(j.employer_name)g.appendChild(el("span","tag","🏢 "+j.employer_name));
     if(j.urgent)g.appendChild(el("span","tag u","🔥 مستعجل"));
     g.appendChild(el("span","tag","📍 "+j.city));g.appendChild(el("span","tag",j.trade));
     if(j.pay)g.appendChild(el("span","tag","💰 "+j.pay));
     if(j.created_at)g.appendChild(el("span","tag","🗓 نشر "+fdate(j.created_at)));
     tx.appendChild(g);hd.appendChild(co);hd.appendChild(tx);hd.appendChild(el("span","chev","⌄"));d.appendChild(hd);
-    var mo=el("div","more");
+    var mo=el("div","more");if(okPh(j.photo_url)){var im=el("img","ph");im.src=j.photo_url;im.alt="";im.loading="lazy";mo.appendChild(im)}
     if(j.description)mo.appendChild(el("p",0,j.description));
     var r=el("div","row");
     if(j.location_url&&okMap(j.location_url)){var m=el("a","map","📍 موقع العمل");m.href=j.location_url;m.target="_blank";m.rel="noopener noreferrer";r.appendChild(m)}
@@ -161,44 +170,83 @@ function render(){
     hd.onclick=function(){d.classList.toggle("open")};
     L.appendChild(d)})}
 function load(){
-  api("/rest/v1/jobs?select=id,title,trade,city,pay,description,urgent,location_url,created_at&approved=eq.true&order=created_at.desc&limit=200")
+  api("/rest/v1/jobs?select=id,title,trade,city,pay,description,urgent,location_url,photo_url,employer_name,created_at&approved=eq.true&order=created_at.desc&limit=200")
   .then(function(r){if(!r.ok)throw 0;return r.json()}).then(function(d){jobs=d;render()})
   .catch(function(){$("list").innerHTML="";$("list").appendChild(el("div","empty","وقع مشكل فالتحميل، عاود حدث الصفحة."))})}
 
 /* ---------- apply ---------- */
+function age(d){var b=new Date(d),n=new Date(),a=n.getFullYear()-b.getFullYear();if(n<new Date(n.getFullYear(),b.getMonth(),b.getDate()))a--;return a}
+function maxBirth(){var d=new Date();d.setFullYear(d.getFullYear()-18);return d.toISOString().slice(0,10)}
+function getProfile(){return api("/rest/v1/profiles?select=*&user_id=eq."+S.user.id).then(function(r){if(!r.ok)throw 0;return r.json()}).then(function(a){return a[0]||null})}
+var ADMIN="ihyaabdelkarim3@gmail.com";
+function getEmployer(){return api("/rest/v1/employers?select=*&user_id=eq."+S.user.id).then(function(r){if(!r.ok)throw 0;return r.json()}).then(function(a){return a[0]||null})}
+function employerDlg(){
+  dialog("طلب إنشاء حساب مشغل",[
+    {k:"bn",l:"اسم الضيعة / المقاولة / المحل (كيبان للجميع)",m:80,p:"إلا ماعندكش، كتب الاسم اللي بغيتي يبان"},
+    {k:"n",l:"اسمك الكامل (كيبان غير للإدارة)",m:80},
+    {k:"k",l:"نوع المشغل",t:"select",o:["فرد","مقاولة / شركة","ضيعة فلاحية","محل تجاري","أخرى"]},
+    {k:"ph",l:"رقم الهاتف (إجباري، كيبان غير للإدارة)",t:"tel",d:1,p:"06XXXXXXXX"},
+    {k:"c",l:"المدينة / الجماعة",t:"select",o:CITIES}],[
+    {t:"إرسال الطلب",f:function(v,er,cl){
+      if(!v.bn||!v.n||dg(v.ph).length<10){er("عمر كل الخانات برقم هاتف صحيح");return}
+      api("/rest/v1/employers","POST",{business_name:v.bn,full_name:v.n,kind:v.k,phone:v.ph,city:v.c},{Prefer:"return=minimal"}).then(function(r){
+        if(r.ok){cl();toast("تم إرسال الطلب ✅ غادي نتواصلو معاك باش نأكدو حسابك");if($("me").style.display==="block")loadMe()}
+        else if(r.status===409)er("ملفك موجود ديجا");else er("وقع مشكل، عاود المحاولة")}).catch(function(){er("وقع مشكل، عاود المحاولة")})}},
+    {t:"إلغاء",c:"g",f:function(v,er,cl){cl()}}])}
+function profileDlg(){
+  dialog("طلب إنشاء حساب عامل",[
+    {k:"n",l:"الاسم الكامل",m:60},
+    {k:"ph",l:"رقم الهاتف (غادي نتواصلو معاك عليه)",t:"tel",d:1,p:"06XXXXXXXX"},
+    {k:"b",l:"تاريخ الازدياد (18 سنة فما فوق)",t:"date",mx:maxBirth()},
+    {k:"ms",l:"الحالة العائلية",t:"select",o:["عازب","متزوج"]}],[
+    {t:"إرسال الطلب",f:function(v,er,cl){
+      if(!v.n||dg(v.ph).length<10||!v.b){er("عمر جميع الخانات بشكل صحيح");return}
+      if(v.b>maxBirth()){er("خاصك تكون عندك 18 سنة على الأقل");return}
+      api("/rest/v1/profiles","POST",{full_name:v.n,phone:v.ph,birth_date:v.b,marital_status:v.ms},{Prefer:"return=minimal"}).then(function(r){
+        if(r.ok){cl();toast("تم إرسال الطلب ✅ غادي نتواصلو معاك باش نأكدو حسابك");if($("me").style.display==="block")loadMe()}
+        else if(r.status===409)er("ملفك موجود ديجا");else er("وقع مشكل، عاود المحاولة")}).catch(function(){er("وقع مشكل، عاود المحاولة")})}},
+    {t:"إلغاء",c:"g",f:function(v,er,cl){cl()}}])}
 function applyDlg(j){
   if(!S){authDlg(function(){applyDlg(j)});return}
-  var pf=prof();
-  dialog("قدّم طلبك: "+j.title,[
-    {k:"n",l:"الاسم الكامل",v:pf.n,m:60},
-    {k:"ph",l:"رقم الهاتف",t:"tel",d:1,v:pf.ph,p:"06XXXXXXXX"},
-    {k:"x",l:"الخبرة (اختياري)",m:120,p:"مثال: 3 سنوات فالبناء"},
-    {k:"m",l:"رسالة للمشغل (اختياري)",t:"area",m:300}],[
-    {t:"إرسال الطلب",f:function(v,er,cl){
-      if(!v.n||dg(v.ph).length<10){er("كتب الاسم ورقم هاتف صحيح");return}
-      api("/rest/v1/applications","POST",{job_id:j.id,name:v.n,phone:v.ph,experience:v.x||null,message:v.m||null},{Prefer:"return=minimal"}).then(function(r){
-        if(r.ok){setProf({n:v.n,ph:v.ph});cl();toast("تم إرسال طلبك ✅ المشغل غادي يتصل بيك")}
-        else if(r.status===409)er("قدمتي ديجا على هاد العرض");
-        else er("وقع مشكل، عاود المحاولة")}).catch(function(){er("وقع مشكل، عاود المحاولة")})}},
-    {t:"إلغاء",c:"g",f:function(v,er,cl){cl()}}])}
+  getProfile().then(function(p){
+    if(!p){profileDlg();return}
+    if(!p.verified){toast("حسابك قيد المراجعة ⏳ غادي نتواصلو معاك باش نأكدوه");return}
+    dialog("قدّم طلبك: "+j.title,[
+      {k:"x",l:"الخبرة (اختياري)",m:120,p:"مثال: 3 سنوات فالبناء"},
+      {k:"m",l:"رسالة للمشغل (اختياري)",t:"area",m:300}],[
+      {t:"إرسال الطلب",f:function(v,er,cl){
+        api("/rest/v1/applications","POST",{job_id:j.id,experience:v.x||null,message:v.m||null},{Prefer:"return=minimal"}).then(function(r){
+          if(r.ok){cl();toast("تم إرسال طلبك ✅ المشغل غادي يتصل بيك")}
+          else if(r.status===409)er("قدمتي ديجا على هاد العرض");
+          else er("وقع مشكل، عاود المحاولة")}).catch(function(){er("وقع مشكل، عاود المحاولة")})}},
+      {t:"إلغاء",c:"g",f:function(v,er,cl){cl()}}])
+  }).catch(function(){toast("وقع مشكل، عاود المحاولة")})}
 
 /* ---------- post a job ---------- */
 function postDlg(){
   if(!S){authDlg(postDlg);return}
+  if(S.user.email===ADMIN){postForm();return}
+  getEmployer().then(function(e){
+    if(!e){employerDlg();return}
+    if(!e.verified){toast("حسابك كمشغل قيد المراجعة ⏳ غادي نتواصلو معاك باش نأكدوه");return}
+    postForm()}).catch(function(){toast("وقع مشكل، عاود المحاولة")})}
+function postForm(){
   dialog("نشر عرض خدمة",[
     {k:"t",l:"عنوان العرض",m:80,p:"مثال: خاص بناي ماهر"},
     {k:"tr",l:"المهنة",t:"select",o:TRADES},
     {k:"c",l:"المدينة / الجماعة",t:"select",o:CITIES},
     {k:"p",l:"الأجر (اختياري)",m:40,p:"مثال: 150 درهم فاليوم"},
     {k:"l",l:"موقع العمل: رابط Google Maps (اختياري)",d:1,p:"https://maps.app.goo.gl/..."},
+    {k:"f",l:"صورة توضح طبيعة العمل (اختياري)",t:"file"},
     {k:"d",l:"تفاصيل",t:"area",m:400,p:"شحال من يوم، فين بالضبط، شنو خاص يعرف..."},
     {k:"u",l:"خدمة مستعجلة (اليوم / غدا)",t:"checkbox"}],[
     {t:"نشر",f:function(v,er,cl){
       if(!v.t){er("كتب عنوان العرض");return}
       if(v.l&&!okMap(v.l)){er("رابط الموقع خاصو يكون رابط Google Maps");return}
-      api("/rest/v1/jobs","POST",{title:v.t,trade:v.tr,city:v.c,pay:v.p||null,phone:"",description:v.d||null,urgent:v.u,location_url:v.l||null},{Prefer:"return=minimal"}).then(function(r){
+      var send=function(url){api("/rest/v1/jobs","POST",{title:v.t,trade:v.tr,city:v.c,pay:v.p||null,phone:"",description:v.d||null,urgent:v.u,location_url:v.l||null,photo_url:url||null},{Prefer:"return=minimal"}).then(function(r){
         if(r.ok){cl();toast("تم الإرسال ✅ غادي يبان العرض ملي نراجعوه ونوافقو عليه");if($("me").style.display==="block")loadMe()}
-        else er("وقع مشكل فالنشر، عاود المحاولة")}).catch(function(){er("وقع مشكل فالنشر")})}},
+        else er("وقع مشكل فالنشر، عاود المحاولة")}).catch(function(){er("وقع مشكل فالنشر")})};
+      if(v.f){if(!/^image\//.test(v.f.type)){er("الملف خاصو يكون صورة");return}er("...جاري رفع الصورة");upPhoto(v.f).then(send).catch(function(){er("وقع مشكل فرفع الصورة، عاود المحاولة")})}else send(null)}},
     {t:"إلغاء",c:"g",f:function(v,er,cl){cl()}}])}
 
 /* ---------- my account ---------- */
@@ -206,13 +254,23 @@ var ST={new:"جديد",accepted:"✅ مقبول",rejected:"❌ مرفوض"};
 function loadMe(){
   var M=$("me");M.innerHTML="";M.appendChild(el("div","empty","...جاري التحميل"));
   Promise.all([
-    api("/rest/v1/jobs?select=id,title,city,approved,created_at,applications(id,name,phone,experience,message,status,created_at)&owner_id=eq."+S.user.id+"&order=created_at.desc").then(function(r){if(!r.ok)throw 0;return r.json()}),
-    api("/rest/v1/applications?select=id,status,created_at,jobs(title,city)&applicant_id=eq."+S.user.id+"&order=created_at.desc").then(function(r){if(!r.ok)throw 0;return r.json()})
-  ]).then(function(x){renderMe(x[0],x[1])}).catch(function(){M.innerHTML="";M.appendChild(el("div","empty","وقع مشكل فالتحميل"))})}
+    api("/rest/v1/jobs?select=id,title,city,approved,created_at,applications(id,name,phone,marital_status,birth_date,experience,message,status,created_at)&owner_id=eq."+S.user.id+"&order=created_at.desc").then(function(r){if(!r.ok)throw 0;return r.json()}),
+    api("/rest/v1/applications?select=id,status,created_at,jobs(title,city)&applicant_id=eq."+S.user.id+"&order=created_at.desc").then(function(r){if(!r.ok)throw 0;return r.json()}),
+    getProfile(),
+    getEmployer()
+  ]).then(function(x){renderMe(x[0],x[1],x[2],x[3])}).catch(function(){M.innerHTML="";M.appendChild(el("div","empty","وقع مشكل فالتحميل"))})}
 function setSt(id,s){api("/rest/v1/applications?id=eq."+id,"PATCH",{status:s},{Prefer:"return=minimal"}).then(loadMe)}
-function renderMe(mj,ma){
+function renderMe(mj,ma,pr,em){
   var M=$("me");M.innerHTML="";
   M.appendChild(el("div","sub","حسابك: "+S.user.email));
+  var sb=el("div","job");sb.appendChild(el("b",0,"ملفي كعامل"));
+  if(!pr){sb.appendChild(el("p",0,"باش تقدم على العروض خاصك ملف عامل مؤكد."));var pb=el("button",0,"أكمل ملفي");pb.onclick=profileDlg;sb.appendChild(pb)}
+  else sb.appendChild(el("p",0,pr.verified?"✅ حسابك مؤكد، تقدر تقدم على العروض":"⏳ طلبك قيد المراجعة، غادي نتواصلو معاك"));
+  M.appendChild(sb);
+  var eb=el("div","job");eb.appendChild(el("b",0,"ملفي كمشغل"));
+  if(!em){eb.appendChild(el("p",0,"باش تنشر عروض خاصك ملف مشغل مؤكد."));var ebb=el("button",0,"أكمل ملف المشغل");ebb.onclick=employerDlg;eb.appendChild(ebb)}
+  else eb.appendChild(el("p",0,em.verified?"✅ حسابك مؤكد، تقدر تنشر العروض":"⏳ طلبك قيد المراجعة، غادي نتواصلو معاك"));
+  M.appendChild(eb);
   var ph=el("div","row");var nb=el("button",0,"➕ نشر عرض جديد");nb.onclick=postDlg;ph.appendChild(nb);M.appendChild(ph);
   M.appendChild(el("h2",0,"عروضي والطلبات اللي توصلاتني"));
   if(!mj.length)M.appendChild(el("div","empty","ما نشرتي حتى عرض"));
@@ -222,6 +280,7 @@ function renderMe(mj,ma){
     j.applications.forEach(function(a){
       var p=el("div","app");p.appendChild(el("b",0,a.name+" · "+ST[a.status]));
       var t=el("div");var l=el("a",0,a.phone);l.href="tel:"+dg(a.phone);l.dir="ltr";t.appendChild(document.createTextNode("📞 "));t.appendChild(l);p.appendChild(t);
+      if(a.marital_status||a.birth_date)p.appendChild(el("div",0,"👤 "+(a.birth_date?age(a.birth_date)+" سنة · ":"")+(a.marital_status||"")+" · ✅ هوية مؤكدة"));
       if(a.experience)p.appendChild(el("div",0,"🛠 "+a.experience));
       if(a.message)p.appendChild(el("div",0,"💬 "+a.message));
       var r=el("div","row");
