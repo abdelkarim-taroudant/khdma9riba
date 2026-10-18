@@ -152,7 +152,7 @@ function render(){
   if(!f.length){L.appendChild(el("div","empty","ما كاين حتى عرض دابا. كن أول واحد كينشر! 👆"));return}
   f.forEach(function(j){
     var d=el("div","job"),ic=ICONS[j.trade]||["💼","rgba(100,140,100,.22)"];
-    var hd=el("div","hd"),co=el("div","ico",Array.from(ic[0])[0]);co.style.background=ic[1];if(okPh(j.photo_url)){co.textContent="";var th=el("img");th.src=j.photo_url;th.alt="";co.appendChild(th)}
+    var hd=el("div","hd"),co=el("div","ico",Array.from(ic[0])[0]);co.style.background=ic[1];
     var tx=el("div","tx");tx.appendChild(el("h3",0,j.title));
     var g=el("div","tags");
     if(j.employer_name)g.appendChild(el("span","tag","🏢 "+j.employer_name));
@@ -161,7 +161,7 @@ function render(){
     if(j.pay)g.appendChild(el("span","tag","💰 "+j.pay));
     if(j.created_at)g.appendChild(el("span","tag","🗓 نشر "+fdate(j.created_at)));
     tx.appendChild(g);hd.appendChild(co);hd.appendChild(tx);hd.appendChild(el("span","chev","⌄"));d.appendChild(hd);
-    var mo=el("div","more");if(okPh(j.photo_url)){var im=el("img","ph");im.src=j.photo_url;im.alt="";im.loading="lazy";mo.appendChild(im)}
+    var mo=el("div","more");
     if(j.description)mo.appendChild(el("p",0,j.description));
     var r=el("div","row");
     if(j.location_url&&okMap(j.location_url)){var m=el("a","map","📍 موقع العمل");m.href=j.location_url;m.target="_blank";m.rel="noopener noreferrer";r.appendChild(m)}
@@ -170,7 +170,7 @@ function render(){
     hd.onclick=function(){d.classList.toggle("open")};
     L.appendChild(d)})}
 function load(){
-  api("/rest/v1/jobs?select=id,title,trade,city,pay,description,urgent,location_url,photo_url,employer_name,created_at&approved=eq.true&order=created_at.desc&limit=200")
+  api("/rest/v1/jobs?select=id,title,trade,city,pay,description,urgent,location_url,employer_name,created_at&approved=eq.true&order=created_at.desc&limit=200")
   .then(function(r){if(!r.ok)throw 0;return r.json()}).then(function(d){jobs=d;render()})
   .catch(function(){$("list").innerHTML="";$("list").appendChild(el("div","empty","وقع مشكل فالتحميل، عاود حدث الصفحة."))})}
 
@@ -237,16 +237,15 @@ function postForm(){
     {k:"c",l:"المدينة / الجماعة",t:"select",o:CITIES},
     {k:"p",l:"الأجر (اختياري)",m:40,p:"مثال: 150 درهم فاليوم"},
     {k:"l",l:"موقع العمل: رابط Google Maps (اختياري)",d:1,p:"https://maps.app.goo.gl/..."},
-    {k:"f",l:"صورة توضح طبيعة العمل (اختياري)",t:"file"},
     {k:"d",l:"تفاصيل",t:"area",m:400,p:"شحال من يوم، فين بالضبط، شنو خاص يعرف..."},
     {k:"u",l:"خدمة مستعجلة (اليوم / غدا)",t:"checkbox"}],[
     {t:"نشر",f:function(v,er,cl){
       if(!v.t){er("كتب عنوان العرض");return}
       if(v.l&&!okMap(v.l)){er("رابط الموقع خاصو يكون رابط Google Maps");return}
-      var send=function(url){api("/rest/v1/jobs","POST",{title:v.t,trade:v.tr,city:v.c,pay:v.p||null,phone:"",description:v.d||null,urgent:v.u,location_url:v.l||null,photo_url:url||null},{Prefer:"return=minimal"}).then(function(r){
+      var send=function(url){api("/rest/v1/jobs","POST",{title:v.t,trade:v.tr,city:v.c,pay:v.p||null,phone:"",description:v.d||null,urgent:v.u,location_url:v.l||null},{Prefer:"return=minimal"}).then(function(r){
         if(r.ok){cl();toast("تم الإرسال ✅ غادي يبان العرض ملي نراجعوه ونوافقو عليه");if($("me").style.display==="block")loadMe()}
         else er("وقع مشكل فالنشر، عاود المحاولة")}).catch(function(){er("وقع مشكل فالنشر")})};
-      if(v.f){if(!/^image\//.test(v.f.type)){er("الملف خاصو يكون صورة");return}er("...جاري رفع الصورة");upPhoto(v.f).then(send).catch(function(){er("وقع مشكل فرفع الصورة، عاود المحاولة")})}else send(null)}},
+      send(null)}},
     {t:"إلغاء",c:"g",f:function(v,er,cl){cl()}}])}
 
 /* ---------- my account ---------- */
