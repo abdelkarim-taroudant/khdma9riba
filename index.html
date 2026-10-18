@@ -6,19 +6,20 @@
 <title>خدمة قريبة – الشغل فإقليم تارودانت</title>
 <meta name="description" content="خدمة قريبة: عروض الشغل فإقليم تارودانت. مشغلين وعمال فبلاصة وحدة.">
 <style>
-:root{--bg:#faf7f2;--card:#fff;--ink:#1d2a1f;--mute:#667064;--line:#e4ddd0;--acc:#1f7a4d;--acc2:#e9f4ee;--warn:#c2410c;--warnbg:#fff1e8;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
-@media (prefers-color-scheme:dark){:root{--bg:#121712;--card:#1b231c;--ink:#eef2ec;--mute:#9aa597;--line:#2c382d;--acc:#4cc38a;--acc2:#1e2f25;--warn:#fb923c;--warnbg:#33231a;color-scheme:dark}}
+:root{--bg:#faf7f2;--card:#fff;--ink:#1d2a1f;--mute:#667064;--line:#e4ddd0;--acc:#1f7a4d;--acc2:#e9f4ee;--warn:#c2410c;--warnbg:#fff1e8;--red:#b91c1c;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root{--bg:#121712;--card:#1b231c;--ink:#eef2ec;--mute:#9aa597;--line:#2c382d;--acc:#4cc38a;--acc2:#1e2f25;--warn:#fb923c;--warnbg:#33231a;--red:#f87171;color-scheme:dark}}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",Tahoma,Arial,sans-serif;line-height:1.55}
 .wrap{max-width:720px;margin:0 auto;padding:16px}
-h1{margin:0;font-size:26px}
+.top{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+h1{margin:0;font-size:24px}h2{font-size:18px;margin:16px 0 8px}
 .sub{color:var(--mute);margin:2px 0 14px;font-size:14px}
+#acct{display:flex;gap:6px;flex-wrap:wrap}#acct button{padding:7px 11px;font-size:13px}
 .bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
 select,input,textarea{font:inherit;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px;width:100%}
 .bar select{flex:1;min-width:130px}
 button{font:inherit;cursor:pointer;border:0;border-radius:10px;padding:10px 14px;background:var(--acc);color:#fff;font-weight:600}
-button.ghost{background:var(--acc2);color:var(--acc)}
-button:disabled{opacity:.6}
+button.g{background:var(--acc2);color:var(--acc)}button.r{background:transparent;color:var(--red);border:1px solid var(--red)}
 button.big{width:100%;margin-bottom:14px;padding:13px}
 .job{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:10px}
 .pic{height:84px;border-radius:10px;margin-bottom:10px;display:flex;align-items:center;justify-content:center;font-size:44px;letter-spacing:8px}
@@ -27,107 +28,221 @@ button.big{width:100%;margin-bottom:14px;padding:13px}
 .tag{font-size:12px;padding:2px 9px;border-radius:99px;background:var(--acc2);color:var(--acc)}
 .tag.u{background:var(--warnbg);color:var(--warn)}
 .job p{margin:4px 0 10px;color:var(--mute);font-size:14px;white-space:pre-wrap}
-a.wa{display:inline-block;background:var(--acc);color:#fff;text-decoration:none;padding:9px 14px;border-radius:10px;font-weight:600;font-size:14px}
-.map{background:var(--acc2);color:var(--acc);margin-inline-end:8px}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+a.map{display:inline-block;background:var(--acc2);color:var(--acc);text-decoration:none;padding:10px 14px;border-radius:10px;font-weight:600;font-size:14px}
+.app{border-top:1px solid var(--line);padding:8px 0;margin-top:8px;font-size:14px}
+.app a{color:var(--acc);font-weight:600}
+.hd{display:flex;gap:10px;align-items:center;cursor:pointer}.ico{width:46px;height:46px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:24px;flex:none}.hd .tx{flex:1;min-width:0}.hd h3{margin:0 0 4px;font-size:16px}.hd .tags{margin:0}.chev{color:var(--mute);font-size:18px;transition:transform .2s}.job.open .chev{transform:rotate(180deg)}.more{display:none;margin-top:10px}.job.open .more{display:block}
 .empty{text-align:center;color:var(--mute);padding:30px 10px}
-#form{display:none;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:14px}
-#form label{display:block;font-size:13px;color:var(--mute);margin:10px 0 4px}
-.row{display:flex;gap:8px;justify-content:space-between;margin-top:12px}
-.note{font-size:12px;color:var(--mute);margin-top:14px;text-align:center}
+.ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);align-items:center;justify-content:center;padding:16px;z-index:9}
+.dlg{background:var(--card);border-radius:16px;padding:16px;width:100%;max-width:460px;max-height:90vh;overflow:auto}
+.dlg h3{margin:0 0 6px}.dlg label{display:block;font-size:13px;color:var(--mute);margin:10px 0 4px}
+.dlg label.chk{display:flex;gap:8px;align-items:center;color:var(--ink)}.dlg label.chk input{width:auto;margin:0}
+.err{color:var(--red);font-size:14px;margin-top:8px}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:10px;z-index:10;display:none;max-width:90%}
 </style>
 </head>
 <body>
 <div class="wrap">
-  <h1>💼 خدمة قريبة</h1>
+  <div class="top"><h1>💼 خدمة قريبة</h1><div id="acct"></div></div>
   <div class="sub">Travail · الشغل فإقليم تارودانت · مشغلين وعمال فبلاصة وحدة</div>
 
-  <button class="big" id="toggle">➕ نشر عرض خدمة (للمشغلين)</button>
-
-  <div id="form">
-    <label>عنوان العرض</label><input id="f_title" maxlength="80" placeholder="مثال: خاص بناي ماهر">
-    <label>المهنة</label><select id="f_trade"></select>
-    <label>المدينة / الجماعة</label><select id="f_city"></select>
-    <label>الأجر (اختياري)</label><input id="f_pay" maxlength="40" placeholder="مثال: 150 درهم فاليوم">
-    <label>رقم الواتساب</label><input id="f_phone" inputmode="tel" dir="ltr" placeholder="06XXXXXXXX">
-    <label>موقع العمل (رابط Google Maps، اختياري)</label><input id="f_loc" dir="ltr" placeholder="https://maps.app.goo.gl/...">
-    <label>تفاصيل</label><textarea id="f_desc" rows="3" maxlength="400" placeholder="شحال من يوم، فين بالضبط، شنو خاص يعرف..."></textarea>
-    <label style="display:flex;gap:8px;align-items:center"><input type="checkbox" id="f_urgent" style="width:auto"> خدمة مستعجلة (اليوم / غدا)</label>
-    <div class="row"><button id="send">نشر</button><button class="ghost" id="cancel">إلغاء</button></div>
+  <div id="home">
+    <button class="big" id="post">➕ نشر عرض خدمة (للمشغلين)</button>
+    <div class="bar"><select id="q_city"></select><select id="q_trade"></select></div>
+    <div id="list"><div class="empty">...جاري التحميل</div></div>
   </div>
-
-  <div class="bar"><select id="q_city"></select><select id="q_trade"></select></div>
-  <div id="list"><div class="empty">...جاري التحميل</div></div>
-  <div class="note" id="note"></div>
+  <div id="me" style="display:none"></div>
 </div>
+<div class="ov" id="ov"><div class="dlg" id="dlg"></div></div>
+<div class="toast" id="toast"></div>
 
 <script>
-var SUPABASE_URL="https://lfbyuqhklvnezsucxrza.supabase.co";
-var SUPABASE_KEY="sb_publishable_Z5OfxTRG2GHkz-pRg03pOQ_ixNG-BlC";
-var H={apikey:SUPABASE_KEY,Authorization:"Bearer "+SUPABASE_KEY,"Content-Type":"application/json"};
-
+var B="https://lfbyuqhklvnezsucxrza.supabase.co";
+var K="sb_publishable_Z5OfxTRG2GHkz-pRg03pOQ_ixNG-BlC";
 var CITIES=["تارودانت","أولاد تايمة","إيغرم","أولاد برحيل","أولوز","تالوين","سيدي وعزيز","جماعة أخرى"];
 var TRADES=["فلاحة (جني، سقي، حراسة)","بناء","كهرباء","سباكة","صباغة","نجارة","سياقة","تجارة وبيع","مطعم وطبخ","نظافة","صناعة تقليدية","أخرى"];
 var ICONS={"فلاحة (جني، سقي، حراسة)":["🍊🌾🚜","rgba(120,170,40,.22)"],"بناء":["🧱🏗️👷","rgba(200,130,50,.22)"],"كهرباء":["💡🔌⚡","rgba(240,190,30,.22)"],"سباكة":["🔧🚰🛁","rgba(60,140,220,.22)"],"صباغة":["🎨🖌️🏠","rgba(220,80,120,.22)"],"نجارة":["🪚🪵🚪","rgba(150,100,60,.22)"],"سياقة":["🚚🚗🛣️","rgba(100,110,130,.22)"],"تجارة وبيع":["🛒🏪💳","rgba(150,80,200,.22)"],"مطعم وطبخ":["🍲🥘🍽️","rgba(230,100,50,.22)"],"نظافة":["🧹🧼✨","rgba(40,180,170,.22)"],"صناعة تقليدية":["🏺🧵🪡","rgba(190,80,60,.22)"]};
-var jobs=[];
+var S=null,jobs=[];
+try{S=JSON.parse(localStorage.getItem("s"))}catch(e){}
 
 function $(i){return document.getElementById(i)}
-function fill(sel,arr,all){sel.innerHTML="";if(all){var o=document.createElement("option");o.value="";o.textContent=all;sel.appendChild(o)}arr.forEach(function(t){var o=document.createElement("option");o.value=t;o.textContent=t;sel.appendChild(o)})}
 function el(t,c,x){var e=document.createElement(t);if(c)e.className=c;if(x!=null)e.textContent=x;return e}
-function wa(p){var d=String(p).replace(/\D/g,"");if(d.indexOf("00")===0)d=d.slice(2);else if(d.charAt(0)==="0")d="212"+d.slice(1);return d}
-
+function fdate(s){var d=new Date(s),n=new Date(),a=new Date(d.getFullYear(),d.getMonth(),d.getDate()),b=new Date(n.getFullYear(),n.getMonth(),n.getDate()),k=Math.round((b-a)/864e5);if(k<=0)return"اليوم";if(k===1)return"البارح";return d.toLocaleDateString("ar-MA",{day:"numeric",month:"long",year:"numeric"})}
+function dg(p){return String(p).replace(/\D/g,"")}
 function okMap(u){return /^https:\/\/(maps\.app\.goo\.gl|goo\.gl\/maps|(www\.)?google\.[a-z.]+\/maps|maps\.google\.[a-z.]+)\//i.test(u)}
-fill($("f_trade"),TRADES);fill($("f_city"),CITIES);
-fill($("q_city"),CITIES,"كل المدن");fill($("q_trade"),TRADES,"كل المهن");
+function toast(m){var t=$("toast");t.textContent=m;t.style.display="block";setTimeout(function(){t.style.display="none"},4000)}
+function fill(sel,arr,all){sel.innerHTML="";if(all)sel.appendChild(el("option",0,all)).value="";arr.forEach(function(t){var o=el("option",0,t);o.value=t;sel.appendChild(o)})}
+function prof(){try{return JSON.parse(localStorage.getItem("pf"))||{}}catch(e){return{}}}
+function setProf(p){try{localStorage.setItem("pf",JSON.stringify(p))}catch(e){}}
 
+/* ---------- API + auth ---------- */
+function save(s){S=s;try{if(s)localStorage.setItem("s",JSON.stringify(s));else localStorage.removeItem("s")}catch(e){}}
+function hdr(x){var h={apikey:K,Authorization:"Bearer "+(S?S.access_token:K),"Content-Type":"application/json"};for(var k in x)h[k]=x[k];return h}
+function api(p,m,b,x,re){
+  return fetch(B+p,{method:m||"GET",headers:hdr(x),body:b?JSON.stringify(b):undefined}).then(function(r){
+    if(r.status===401&&S&&!re)return refresh().then(function(){return api(p,m,b,x,1)});
+    return r})}
+function refresh(){
+  var rt=S&&S.refresh_token;if(!rt){logout();return Promise.reject()}
+  return fetch(B+"/auth/v1/token?grant_type=refresh_token",{method:"POST",headers:{apikey:K,"Content-Type":"application/json"},body:JSON.stringify({refresh_token:rt})})
+  .then(function(r){return r.json()}).then(function(d){
+    if(!d.access_token){logout();throw 0}
+    save({access_token:d.access_token,refresh_token:d.refresh_token,user:{id:d.user.id,email:d.user.email}})})}
+function logout(){save(null);renderAcct();showHome()}
+
+/* ---------- dialog ---------- */
+function closeD(){$("ov").style.display="none"}
+function dialog(title,fields,btns){
+  var d=$("dlg");d.innerHTML="";d.appendChild(el("h3",0,title));var ins={};
+  fields.forEach(function(f){
+    var i;
+    if(f.t==="select"){i=document.createElement("select");f.o.forEach(function(x){var o=el("option",0,x);o.value=x;i.appendChild(o)})}
+    else if(f.t==="area"){i=document.createElement("textarea");i.rows=3}
+    else{i=document.createElement("input");i.type=f.t||"text"}
+    if(f.p)i.placeholder=f.p;if(f.d)i.dir="ltr";if(f.m)i.maxLength=f.m;if(f.v)i.value=f.v;
+    ins[f.k]=i;
+    if(f.t==="checkbox"){var w=el("label","chk");w.appendChild(i);w.appendChild(document.createTextNode(f.l));d.appendChild(w)}
+    else{d.appendChild(el("label",0,f.l));d.appendChild(i)}
+  });
+  var er=el("div","err");d.appendChild(er);var r=el("div","row");
+  btns.forEach(function(b){
+    var x=el("button",b.c||"",b.t);
+    x.onclick=function(){var v={};for(var k in ins)v[k]=ins[k].type==="checkbox"?ins[k].checked:ins[k].value.trim();er.textContent="";b.f(v,function(m){er.textContent=m},closeD)};
+    r.appendChild(x)});
+  d.appendChild(r);$("ov").style.display="flex"}
+
+function authDlg(after){
+  dialog("دخول / إنشاء حساب",[{k:"e",l:"الإيميل",t:"email",d:1},{k:"p",l:"كلمة السر (8 حروف على الأقل)",t:"password",d:1}],[
+    {t:"دخول",f:function(v,er,cl){auth("/auth/v1/token?grant_type=password",v,er,cl,after)}},
+    {t:"إنشاء حساب",c:"g",f:function(v,er,cl){auth("/auth/v1/signup",v,er,cl,after,1)}},
+    {t:"إلغاء",c:"g",f:function(v,er,cl){cl()}}])}
+function auth(p,v,er,cl,after,su){
+  if(!v.e||v.p.length<8){er("كتب إيميل وكلمة سر (8 حروف على الأقل)");return}
+  fetch(B+p,{method:"POST",headers:{apikey:K,"Content-Type":"application/json"},body:JSON.stringify({email:v.e,password:v.p})})
+  .then(function(r){return r.json().then(function(d){return{ok:r.ok,d:d}})}).then(function(x){
+    if(x.ok&&x.d.access_token){save({access_token:x.d.access_token,refresh_token:x.d.refresh_token,user:{id:x.d.user.id,email:x.d.user.email}});cl();renderAcct();toast("مرحبا بك ✅");if(after)after();else load()}
+    else if(x.ok&&su){er("تم إنشاء الحساب ✅ تحقق من إيميلك باش تأكد الحساب، ومن بعد دخل")}
+    else er(su?"ما نجحش التسجيل (ربما الإيميل مستعمل)":"الإيميل ولا كلمة السر غالطين")
+  }).catch(function(){er("وقع مشكل، عاود المحاولة")})}
+
+/* ---------- account bar ---------- */
+function renderAcct(){
+  var a=$("acct");a.innerHTML="";
+  if(S){
+    var h=el("button","g","🏠");h.onclick=showHome;var m=el("button",0,"👤 حسابي");m.onclick=showMe;var o=el("button","g","خروج");o.onclick=logout;
+    a.appendChild(h);a.appendChild(m);a.appendChild(o)
+  }else{var b=el("button",0,"دخول / تسجيل");b.onclick=function(){authDlg()};a.appendChild(b)}}
+function showHome(){$("me").style.display="none";$("home").style.display="block";load()}
+function showMe(){$("home").style.display="none";$("me").style.display="block";loadMe()}
+
+/* ---------- home ---------- */
 function render(){
   var c=$("q_city").value,t=$("q_trade").value,L=$("list");L.innerHTML="";
   var f=jobs.filter(function(j){return(!c||j.city===c)&&(!t||j.trade===t)});
-  f.sort(function(a,b){return(b.urgent?1:0)-(a.urgent?1:0)||(new Date(b.created_at))-(new Date(a.created_at))});
+  f.sort(function(a,b){return(b.urgent?1:0)-(a.urgent?1:0)||new Date(b.created_at)-new Date(a.created_at)});
   if(!f.length){L.appendChild(el("div","empty","ما كاين حتى عرض دابا. كن أول واحد كينشر! 👆"));return}
   f.forEach(function(j){
-    var d=el("div","job"),ic=ICONS[j.trade]||["💼🤝📋","rgba(100,140,100,.22)"];
-    var pc=el("div","pic",ic[0]);pc.style.background=ic[1];d.appendChild(pc);
-    d.appendChild(el("h3",0,j.title));
+    var d=el("div","job"),ic=ICONS[j.trade]||["💼","rgba(100,140,100,.22)"];
+    var hd=el("div","hd"),co=el("div","ico",Array.from(ic[0])[0]);co.style.background=ic[1];
+    var tx=el("div","tx");tx.appendChild(el("h3",0,j.title));
     var g=el("div","tags");
     if(j.urgent)g.appendChild(el("span","tag u","🔥 مستعجل"));
     g.appendChild(el("span","tag","📍 "+j.city));g.appendChild(el("span","tag",j.trade));
     if(j.pay)g.appendChild(el("span","tag","💰 "+j.pay));
-    d.appendChild(g);
-    if(j.description)d.appendChild(el("p",0,j.description));
-    if(j.location_url&&okMap(j.location_url)){var m=el("a","wa map","📍 موقع العمل");m.href=j.location_url;m.target="_blank";m.rel="noopener noreferrer";d.appendChild(m)}
-    var a=el("a","wa","تواصل بالواتساب");
-    a.href="https://wa.me/"+wa(j.phone);a.target="_blank";a.rel="noopener";
-    a.onclick=function(){
-      fetch(SUPABASE_URL+"/rest/v1/rpc/add_click",{method:"POST",headers:H,body:JSON.stringify({job_id:j.id}),keepalive:true}).catch(function(){})
-    };
-    d.appendChild(a);L.appendChild(d)
-  })
-}
-
+    if(j.created_at)g.appendChild(el("span","tag","🗓 نشر "+fdate(j.created_at)));
+    tx.appendChild(g);hd.appendChild(co);hd.appendChild(tx);hd.appendChild(el("span","chev","⌄"));d.appendChild(hd);
+    var mo=el("div","more");
+    if(j.description)mo.appendChild(el("p",0,j.description));
+    var r=el("div","row");
+    if(j.location_url&&okMap(j.location_url)){var m=el("a","map","📍 موقع العمل");m.href=j.location_url;m.target="_blank";m.rel="noopener noreferrer";r.appendChild(m)}
+    var b=el("button",0,"قدّم طلبك");b.onclick=function(){applyDlg(j)};r.appendChild(b);
+    mo.appendChild(r);d.appendChild(mo);
+    hd.onclick=function(){d.classList.toggle("open")};
+    L.appendChild(d)})}
 function load(){
-  fetch(SUPABASE_URL+"/rest/v1/jobs?select=id,title,trade,city,pay,phone,description,urgent,location_url,created_at&order=created_at.desc&limit=200",{headers:H})
-  .then(function(r){if(!r.ok)throw 0;return r.json()})
-  .then(function(d){jobs=d;render()})
-  .catch(function(){$("list").innerHTML="";$("list").appendChild(el("div","empty","وقع مشكل فالتحميل، عاود حدث الصفحة."))})
-}
+  api("/rest/v1/jobs?select=id,title,trade,city,pay,description,urgent,location_url,created_at&approved=eq.true&order=created_at.desc&limit=200")
+  .then(function(r){if(!r.ok)throw 0;return r.json()}).then(function(d){jobs=d;render()})
+  .catch(function(){$("list").innerHTML="";$("list").appendChild(el("div","empty","وقع مشكل فالتحميل، عاود حدث الصفحة."))})}
 
-$("toggle").onclick=function(){$("form").style.display="block";$("toggle").style.display="none"};
-$("cancel").onclick=function(){$("form").style.display="none";$("toggle").style.display="block"};
-$("send").onclick=function(){
-  var j={title:$("f_title").value.trim(),trade:$("f_trade").value,city:$("f_city").value,pay:$("f_pay").value.trim(),phone:$("f_phone").value.trim(),description:$("f_desc").value.trim(),urgent:$("f_urgent").checked,location_url:$("f_loc").value.trim()||null};
-  if(!j.title||wa(j.phone).length<10){alert("كتب العنوان ورقم واتساب صحيح");return}
-  if(j.location_url&&!okMap(j.location_url)){alert("رابط الموقع خاصو يكون رابط Google Maps");return}
-  var b=$("send");b.disabled=true;
-  fetch(SUPABASE_URL+"/rest/v1/jobs",{method:"POST",headers:Object.assign({Prefer:"return=minimal"},H),body:JSON.stringify(j)})
-  .then(function(r){if(!r.ok)throw 0;
-    ["f_title","f_pay","f_phone","f_desc","f_loc"].forEach(function(i){$(i).value=""});$("f_urgent").checked=false;
-    $("cancel").onclick();
-    $("note").textContent="تم الإرسال ✅ غادي يبان العرض ملي نراجعوه ونوافقو عليه"})
-  .catch(function(){alert("وقع مشكل فالنشر، عاود المحاولة")})
-  .then(function(){b.disabled=false})
-};
+/* ---------- apply ---------- */
+function applyDlg(j){
+  if(!S){authDlg(function(){applyDlg(j)});return}
+  var pf=prof();
+  dialog("قدّم طلبك: "+j.title,[
+    {k:"n",l:"الاسم الكامل",v:pf.n,m:60},
+    {k:"ph",l:"رقم الهاتف",t:"tel",d:1,v:pf.ph,p:"06XXXXXXXX"},
+    {k:"x",l:"الخبرة (اختياري)",m:120,p:"مثال: 3 سنوات فالبناء"},
+    {k:"m",l:"رسالة للمشغل (اختياري)",t:"area",m:300}],[
+    {t:"إرسال الطلب",f:function(v,er,cl){
+      if(!v.n||dg(v.ph).length<10){er("كتب الاسم ورقم هاتف صحيح");return}
+      api("/rest/v1/applications","POST",{job_id:j.id,name:v.n,phone:v.ph,experience:v.x||null,message:v.m||null},{Prefer:"return=minimal"}).then(function(r){
+        if(r.ok){setProf({n:v.n,ph:v.ph});cl();toast("تم إرسال طلبك ✅ المشغل غادي يتصل بيك")}
+        else if(r.status===409)er("قدمتي ديجا على هاد العرض");
+        else er("وقع مشكل، عاود المحاولة")}).catch(function(){er("وقع مشكل، عاود المحاولة")})}},
+    {t:"إلغاء",c:"g",f:function(v,er,cl){cl()}}])}
+
+/* ---------- post a job ---------- */
+function postDlg(){
+  if(!S){authDlg(postDlg);return}
+  dialog("نشر عرض خدمة",[
+    {k:"t",l:"عنوان العرض",m:80,p:"مثال: خاص بناي ماهر"},
+    {k:"tr",l:"المهنة",t:"select",o:TRADES},
+    {k:"c",l:"المدينة / الجماعة",t:"select",o:CITIES},
+    {k:"p",l:"الأجر (اختياري)",m:40,p:"مثال: 150 درهم فاليوم"},
+    {k:"l",l:"موقع العمل: رابط Google Maps (اختياري)",d:1,p:"https://maps.app.goo.gl/..."},
+    {k:"d",l:"تفاصيل",t:"area",m:400,p:"شحال من يوم، فين بالضبط، شنو خاص يعرف..."},
+    {k:"u",l:"خدمة مستعجلة (اليوم / غدا)",t:"checkbox"}],[
+    {t:"نشر",f:function(v,er,cl){
+      if(!v.t){er("كتب عنوان العرض");return}
+      if(v.l&&!okMap(v.l)){er("رابط الموقع خاصو يكون رابط Google Maps");return}
+      api("/rest/v1/jobs","POST",{title:v.t,trade:v.tr,city:v.c,pay:v.p||null,phone:"",description:v.d||null,urgent:v.u,location_url:v.l||null},{Prefer:"return=minimal"}).then(function(r){
+        if(r.ok){cl();toast("تم الإرسال ✅ غادي يبان العرض ملي نراجعوه ونوافقو عليه");if($("me").style.display==="block")loadMe()}
+        else er("وقع مشكل فالنشر، عاود المحاولة")}).catch(function(){er("وقع مشكل فالنشر")})}},
+    {t:"إلغاء",c:"g",f:function(v,er,cl){cl()}}])}
+
+/* ---------- my account ---------- */
+var ST={new:"جديد",accepted:"✅ مقبول",rejected:"❌ مرفوض"};
+function loadMe(){
+  var M=$("me");M.innerHTML="";M.appendChild(el("div","empty","...جاري التحميل"));
+  Promise.all([
+    api("/rest/v1/jobs?select=id,title,city,approved,created_at,applications(id,name,phone,experience,message,status,created_at)&owner_id=eq."+S.user.id+"&order=created_at.desc").then(function(r){if(!r.ok)throw 0;return r.json()}),
+    api("/rest/v1/applications?select=id,status,created_at,jobs(title,city)&applicant_id=eq."+S.user.id+"&order=created_at.desc").then(function(r){if(!r.ok)throw 0;return r.json()})
+  ]).then(function(x){renderMe(x[0],x[1])}).catch(function(){M.innerHTML="";M.appendChild(el("div","empty","وقع مشكل فالتحميل"))})}
+function setSt(id,s){api("/rest/v1/applications?id=eq."+id,"PATCH",{status:s},{Prefer:"return=minimal"}).then(loadMe)}
+function renderMe(mj,ma){
+  var M=$("me");M.innerHTML="";
+  M.appendChild(el("div","sub","حسابك: "+S.user.email));
+  var ph=el("div","row");var nb=el("button",0,"➕ نشر عرض جديد");nb.onclick=postDlg;ph.appendChild(nb);M.appendChild(ph);
+  M.appendChild(el("h2",0,"عروضي والطلبات اللي توصلاتني"));
+  if(!mj.length)M.appendChild(el("div","empty","ما نشرتي حتى عرض"));
+  mj.forEach(function(j){
+    var d=el("div","job");d.appendChild(el("h3",0,j.title));
+    var g=el("div","tags");g.appendChild(el("span","tag"+(j.approved?"":" u"),j.approved?"منشور":"قيد المراجعة"));g.appendChild(el("span","tag","📍 "+j.city));g.appendChild(el("span","tag","🗓 "+fdate(j.created_at)));g.appendChild(el("span","tag","📨 "+j.applications.length+" طلب"));d.appendChild(g);
+    j.applications.forEach(function(a){
+      var p=el("div","app");p.appendChild(el("b",0,a.name+" · "+ST[a.status]));
+      var t=el("div");var l=el("a",0,a.phone);l.href="tel:"+dg(a.phone);l.dir="ltr";t.appendChild(document.createTextNode("📞 "));t.appendChild(l);p.appendChild(t);
+      if(a.experience)p.appendChild(el("div",0,"🛠 "+a.experience));
+      if(a.message)p.appendChild(el("div",0,"💬 "+a.message));
+      var r=el("div","row");
+      var ok=el("button","g","قبول");ok.onclick=function(){setSt(a.id,"accepted")};
+      var no=el("button","r","رفض");no.onclick=function(){setSt(a.id,"rejected")};
+      r.appendChild(ok);r.appendChild(no);p.appendChild(r);d.appendChild(p)});
+    var r=el("div","row");var x=el("button","r","حذف العرض");
+    x.onclick=function(){if(!confirm("تمسح هاد العرض نهائيا؟"))return;api("/rest/v1/jobs?id=eq."+j.id,"DELETE",null,{Prefer:"return=minimal"}).then(loadMe)};
+    r.appendChild(x);d.appendChild(r);M.appendChild(d)});
+  M.appendChild(el("h2",0,"الطلبات اللي قدمت"));
+  if(!ma.length)M.appendChild(el("div","empty","ما قدمتي حتى طلب"));
+  ma.forEach(function(a){
+    var d=el("div","job");d.appendChild(el("h3",0,a.jobs?a.jobs.title:"عرض غير متوفر"));
+    var g=el("div","tags");if(a.jobs)g.appendChild(el("span","tag","📍 "+a.jobs.city));g.appendChild(el("span","tag",a.status==="new"?"قيد الدراسة":ST[a.status]));d.appendChild(g);M.appendChild(d)})}
+
+/* ---------- init ---------- */
+fill($("q_city"),CITIES,"كل المدن");fill($("q_trade"),TRADES,"كل المهن");
 $("q_city").onchange=$("q_trade").onchange=render;
-load();
+$("post").onclick=postDlg;
+$("ov").onclick=function(e){if(e.target===$("ov"))closeD()};
+renderAcct();load();
 </script>
 </body>
 </html>
