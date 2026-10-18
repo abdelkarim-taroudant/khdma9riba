@@ -29,6 +29,7 @@ button.r{background:transparent;color:var(--red);border:1px solid var(--red)}
 .tag.p{background:var(--warnbg);color:var(--warn)}
 .job p{margin:4px 0 8px;color:var(--mute);font-size:14px;white-space:pre-wrap}
 .row{display:flex;gap:8px;flex-wrap:wrap}
+img.ph{width:100%;max-height:200px;object-fit:cover;border-radius:10px;margin-bottom:8px}
 .empty{text-align:center;color:var(--mute);padding:30px 10px}
 .err{color:var(--red);font-size:14px;margin:6px 0}
 #app{display:none}
@@ -46,18 +47,20 @@ button.r{background:transparent;color:var(--red);border:1px solid var(--red)}
   </div>
 
   <div id="app">
-    <div class="sum"><div><b id="s_all">0</b>العروض</div><div><b id="s_pend">0</b>قيد المراجعة</div><div><b id="s_clk">0</b>مجموع الضغطات</div></div>
-    <div class="tabs"><button data-f="pending" class="on">قيد المراجعة</button><button data-f="live">منشورة</button><button data-f="all">الكل</button></div>
+    <div class="sum"><div><b id="s_all">0</b>العروض</div><div><b id="s_pend">0</b>قيد المراجعة</div><div><b id="s_clk">0</b>مجموع الطلبات</div></div>
+    <div class="tabs"><button data-f="pending" class="on">قيد المراجعة</button><button data-f="live">منشورة</button><button data-f="all">الكل</button><button data-f="workers" id="tw">العمال</button><button data-f="employers" id="tm">المشغلين</button></div>
     <div id="list"></div>
     <button class="g" id="out" style="width:100%;margin-top:6px">خروج</button>
   </div>
 </div>
 
 <script>
+var profs=[],emps=[];
 var BASE="https://lfbyuqhklvnezsucxrza.supabase.co";
 var KEY="sb_publishable_Z5OfxTRG2GHkz-pRg03pOQ_ixNG-BlC";
 var token=null,jobs=[],filter="pending";
 function $(i){return document.getElementById(i)}
+var PH=BASE+"/storage/v1/object/public/job-photos/";
 function el(t,c,x){var e=document.createElement(t);if(c)e.className=c;if(x!=null)e.textContent=x;return e}
 function api(path,opt){opt=opt||{};opt.headers=Object.assign({apikey:KEY,Authorization:"Bearer "+(token||KEY),"Content-Type":"application/json"},opt.headers||{});return fetch(BASE+path,opt)}
 function wa(p){var d=String(p).replace(/\D/g,"");if(d.charAt(0)==="0")d="212"+d.slice(1);return d}
@@ -75,27 +78,65 @@ $("go").onclick=function(){
 $("out").onclick=logout;
 
 function load(){
-  api("/rest/v1/jobs?select=*&order=created_at.desc&limit=500")
-  .then(function(r){if(r.status===401){logout();throw 0}return r.json()})
-  .then(function(d){jobs=d;render()}).catch(function(){})
+  Promise.all([api("/rest/v1/jobs?select=*,applications(count)&order=created_at.desc&limit=500"),api("/rest/v1/profiles?select=*&order=created_at.desc&limit=500"),api("/rest/v1/employers?select=*&order=created_at.desc&limit=500")])
+  .then(function(rs){if(rs[0].status===401){logout();throw 0}return Promise.all([rs[0].json(),rs[1].ok?rs[1].json():[],rs[2].ok?rs[2].json():[]])})
+  .then(function(d){jobs=d[0];profs=d[1];emps=d[2];var n=profs.filter(function(p){return!p.verified}).length,m=emps.filter(function(p){return!p.verified}).length;$("tw").textContent="العمال"+(n?" ("+n+")":"");$("tm").textContent="المشغلين"+(m?" ("+m+")":"");render()}).catch(function(){})
 }
+function setEmp(id,v){api("/rest/v1/rpc/set_employer_verified",{method:"POST",body:JSON.stringify({uid:id,v:v})}).then(load)}
+function delEmp(id){if(!confirm("تمسح ملف هاد المشغل؟"))return;api("/rest/v1/employers?user_id=eq."+id,{method:"DELETE",headers:{Prefer:"return=minimal"}}).then(load)}
+function renderEmployers(){
+  var L=$("list");L.innerHTML="";
+  if(!emps.length){L.appendChild(el("div","empty","ما كاين حتى مشغل مسجل"));return}
+  emps.forEach(function(p){
+    var d=el("div","job");d.appendChild(el("h3",0,p.business_name||p.full_name));
+    var g=el("div","tags");
+    g.appendChild(el("span","tag"+(p.verified?"":" p"),p.verified?"مؤكد":"فانتظار التأكيد"));
+    g.appendChild(el("span","tag",p.kind));g.appendChild(el("span","tag","📍 "+p.city));
+    d.appendChild(g);d.appendChild(el("p",0,"👤 "+p.full_name+"  ·  📞 "+p.phone));
+    var r=el("div","row");
+    if(p.verified){var u=el("button","g","إلغاء التأكيد");u.onclick=function(){setEmp(p.user_id,false)};r.appendChild(u)}
+    else{var a=el("button",0,"✅ تأكيد");a.onclick=function(){setEmp(p.user_id,true)};r.appendChild(a)}
+    var w=el("button","g","واتساب");w.onclick=function(){window.open("https://wa.me/"+wa(p.phone),"_blank","noopener")};r.appendChild(w);
+    var x=el("button","r","حذف");x.onclick=function(){delEmp(p.user_id)};r.appendChild(x);
+    d.appendChild(r);L.appendChild(d)})}
+function setVer(id,v){api("/rest/v1/rpc/set_verified",{method:"POST",body:JSON.stringify({uid:id,v:v})}).then(load)}
+function delProf(id){if(!confirm("تمسح ملف هاد العامل؟"))return;api("/rest/v1/profiles?user_id=eq."+id,{method:"DELETE",headers:{Prefer:"return=minimal"}}).then(load)}
+function age(d){var b=new Date(d),n=new Date(),a=n.getFullYear()-b.getFullYear();if(n<new Date(n.getFullYear(),b.getMonth(),b.getDate()))a--;return a}
+function renderWorkers(){
+  var L=$("list");L.innerHTML="";
+  if(!profs.length){L.appendChild(el("div","empty","ما كاين حتى عامل مسجل"));return}
+  profs.forEach(function(p){
+    var d=el("div","job");d.appendChild(el("h3",0,p.full_name));
+    var g=el("div","tags");
+    g.appendChild(el("span","tag"+(p.verified?"":" p"),p.verified?"مؤكد":"فانتظار التأكيد"));
+    g.appendChild(el("span","tag",age(p.birth_date)+" سنة"));g.appendChild(el("span","tag",p.marital_status));
+    d.appendChild(g);d.appendChild(el("p",0,"📞 "+p.phone));
+    var r=el("div","row");
+    if(p.verified){var u=el("button","g","إلغاء التأكيد");u.onclick=function(){setVer(p.user_id,false)};r.appendChild(u)}
+    else{var a=el("button",0,"✅ تأكيد");a.onclick=function(){setVer(p.user_id,true)};r.appendChild(a)}
+    var w=el("button","g","واتساب");w.onclick=function(){window.open("https://wa.me/"+wa(p.phone),"_blank","noopener")};r.appendChild(w);
+    var x=el("button","r","حذف");x.onclick=function(){delProf(p.user_id)};r.appendChild(x);
+    d.appendChild(r);L.appendChild(d)})}
 function setApproved(id,v){api("/rest/v1/jobs?id=eq."+id,{method:"PATCH",headers:{Prefer:"return=minimal"},body:JSON.stringify({approved:v})}).then(load)}
 function del(id){if(!confirm("تمسح هاد العرض نهائيا؟"))return;api("/rest/v1/jobs?id=eq."+id,{method:"DELETE",headers:{Prefer:"return=minimal"}}).then(load)}
 
+function nApps(j){return j.applications&&j.applications[0]?j.applications[0].count:0}
 function render(){
   var pend=jobs.filter(function(j){return!j.approved}).length,clk=0;
-  jobs.forEach(function(j){clk+=j.clicks||0});
+  jobs.forEach(function(j){clk+=nApps(j)});
   $("s_all").textContent=jobs.length;$("s_pend").textContent=pend;$("s_clk").textContent=clk;
   var L=$("list");L.innerHTML="";
+  if(filter==="workers"){renderWorkers();return}
+  if(filter==="employers"){renderEmployers();return}
   var f=jobs.filter(function(j){return filter==="all"||(filter==="pending"?!j.approved:j.approved)});
   if(!f.length){L.appendChild(el("div","empty","ما كاين حتى عرض هنا"));return}
   f.forEach(function(j){
-    var d=el("div","job");d.appendChild(el("h3",0,j.title));
+    var d=el("div","job");if(typeof j.photo_url==="string"&&j.photo_url.indexOf(PH)===0){var im=el("img","ph");im.src=j.photo_url;im.alt="";im.loading="lazy";d.appendChild(im)}d.appendChild(el("h3",0,j.title));
     var g=el("div","tags");
     g.appendChild(el("span","tag"+(j.approved?"":" p"),j.approved?"منشور":"قيد المراجعة"));
-    g.appendChild(el("span","tag","📍 "+j.city));g.appendChild(el("span","tag",j.trade));
+    if(j.employer_name)g.appendChild(el("span","tag","🏢 "+j.employer_name));g.appendChild(el("span","tag","📍 "+j.city));g.appendChild(el("span","tag",j.trade));
     if(j.pay)g.appendChild(el("span","tag","💰 "+j.pay));
-    g.appendChild(el("span","tag","👆 "+(j.clicks||0)+" ضغطة"));
+    g.appendChild(el("span","tag","📨 "+nApps(j)+" طلب"));
     d.appendChild(g);
     if(j.description)d.appendChild(el("p",0,j.description));
     d.appendChild(el("p",0,"📞 "+j.phone));
