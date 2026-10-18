@@ -65,7 +65,6 @@ var CITIES=["تارودانت","أولاد تايمة","إيغرم","أولاد 
 var TRADES=["فلاحة (جني، سقي، حراسة)","بناء","كهرباء","سباكة","صباغة","نجارة","سياقة","تجارة وبيع","مطعم وطبخ","نظافة","صناعة تقليدية","أخرى"];
 var ICONS={"فلاحة (جني، سقي، حراسة)":["🍊🌾🚜","rgba(120,170,40,.22)"],"بناء":["🧱🏗️👷","rgba(200,130,50,.22)"],"كهرباء":["💡🔌⚡","rgba(240,190,30,.22)"],"سباكة":["🔧🚰🛁","rgba(60,140,220,.22)"],"صباغة":["🎨🖌️🏠","rgba(220,80,120,.22)"],"نجارة":["🪚🪵🚪","rgba(150,100,60,.22)"],"سياقة":["🚚🚗🛣️","rgba(100,110,130,.22)"],"تجارة وبيع":["🛒🏪💳","rgba(150,80,200,.22)"],"مطعم وطبخ":["🍲🥘🍽️","rgba(230,100,50,.22)"],"نظافة":["🧹🧼✨","rgba(40,180,170,.22)"],"صناعة تقليدية":["🏺🧵🪡","rgba(190,80,60,.22)"]};
 var S=null,jobs=[];
-var ADMIN="ihyaabdelkarim3@gmail.com";
 try{S=JSON.parse(localStorage.getItem("s"))}catch(e){}
 
 function $(i){return document.getElementById(i)}
@@ -77,13 +76,6 @@ function toast(m){var t=$("toast");t.textContent=m;t.style.display="block";setTi
 function fill(sel,arr,all){sel.innerHTML="";if(all)sel.appendChild(el("option",0,all)).value="";arr.forEach(function(t){var o=el("option",0,t);o.value=t;sel.appendChild(o)})}
 function prof(){try{return JSON.parse(localStorage.getItem("pf"))||{}}catch(e){return{}}}
 function setProf(p){try{localStorage.setItem("pf",JSON.stringify(p))}catch(e){}}
-
-var PH=B+"/storage/v1/object/public/job-photos/";
-function okPh(u){return typeof u==="string"&&u.indexOf(PH)===0}
-function shrink(file){return new Promise(function(res,rej){var u=URL.createObjectURL(file),im=new Image();im.onload=function(){var w=im.width,h=im.height,k=Math.min(1,1000/Math.max(w,h)),c=document.createElement("canvas");c.width=Math.round(w*k);c.height=Math.round(h*k);c.getContext("2d").drawImage(im,0,0,c.width,c.height);URL.revokeObjectURL(u);c.toBlob(function(b){b?res(b):rej()},"image/jpeg",.8)};im.onerror=rej;im.src=u})}
-function upPhoto(file){return shrink(file).then(function(bl){var path=S.user.id+"/"+Date.now()+".jpg";
-  function go(re){return fetch(B+"/storage/v1/object/job-photos/"+path,{method:"POST",headers:{apikey:K,Authorization:"Bearer "+S.access_token,"Content-Type":"image/jpeg"},body:bl}).then(function(r){if(r.status===401&&!re)return refresh().then(function(){return go(1)});if(!r.ok)throw 0;return PH+path})}
-  return go()})}
 
 /* ---------- API + auth ---------- */
 function save(s){S=s;try{if(s)localStorage.setItem("s",JSON.stringify(s));else localStorage.removeItem("s")}catch(e){}}
@@ -171,7 +163,7 @@ function render(){
     hd.onclick=function(){d.classList.toggle("open")};
     L.appendChild(d)})}
 function load(){
-  api("/rest/v1/jobs?select=id,title,trade,city,pay,phone,description,urgent,location_url,employer_name,created_at&approved=eq.true&order=created_at.desc&limit=200")
+  api("/rest/v1/jobs?select=id,title,trade,city,pay,description,urgent,location_url,employer_name,created_at&approved=eq.true&order=created_at.desc&limit=200")
   .then(function(r){if(!r.ok)throw 0;return r.json()}).then(function(d){jobs=d;render()})
   .catch(function(){$("list").innerHTML="";$("list").appendChild(el("div","empty","وقع مشكل فالتحميل، عاود حدث الصفحة."))})}
 
@@ -179,6 +171,7 @@ function load(){
 function age(d){var b=new Date(d),n=new Date(),a=n.getFullYear()-b.getFullYear();if(n<new Date(n.getFullYear(),b.getMonth(),b.getDate()))a--;return a}
 function maxBirth(){var d=new Date();d.setFullYear(d.getFullYear()-18);return d.toISOString().slice(0,10)}
 function getProfile(){return api("/rest/v1/profiles?select=*&user_id=eq."+S.user.id).then(function(r){if(!r.ok)throw 0;return r.json()}).then(function(a){return a[0]||null})}
+var ADMIN="ihyaabdelkarim3@gmail.com";
 function getEmployer(){return api("/rest/v1/employers?select=*&user_id=eq."+S.user.id).then(function(r){if(!r.ok)throw 0;return r.json()}).then(function(a){return a[0]||null})}
 function employerDlg(){
   dialog("طلب إنشاء حساب مشغل",[
@@ -229,35 +222,31 @@ function postDlg(){
   getEmployer().then(function(e){
     if(!e){employerDlg();return}
     if(!e.verified){toast("حسابك كمشغل قيد المراجعة ⏳ غادي نتواصلو معاك باش نأكدوه");return}
-    postForm(e.phone)}).catch(function(){toast("وقع مشكل، عاود المحاولة")})}
-function postForm(empPhone){
-  var fields=[
+    postForm()}).catch(function(){toast("وقع مشكل، عاود المحاولة")})}
+function postForm(){
+  dialog("نشر عرض خدمة",[
     {k:"t",l:"عنوان العرض",m:80,p:"مثال: خاص بناي ماهر"},
     {k:"tr",l:"المهنة",t:"select",o:TRADES},
     {k:"c",l:"المدينة / الجماعة",t:"select",o:CITIES},
     {k:"p",l:"الأجر (اختياري)",m:40,p:"مثال: 150 درهم فاليوم"},
-    {k:"ph",l:"رقم الهاتف للاتصال",t:"tel",d:1,v:empPhone||"",p:"06XXXXXXXX"},
     {k:"l",l:"موقع العمل: رابط Google Maps (اختياري)",d:1,p:"https://maps.app.goo.gl/..."},
     {k:"d",l:"تفاصيل",t:"area",m:400,p:"شحال من يوم، فين بالضبط، شنو خاص يعرف..."},
-    {k:"u",l:"خدمة مستعجلة (اليوم / غدا)",t:"checkbox"}
-  ];
-  dialog("نشر عرض خدمة",fields,[
+    {k:"u",l:"خدمة مستعجلة (اليوم / غدا)",t:"checkbox"}],[
     {t:"نشر",f:function(v,er,cl){
       if(!v.t){er("كتب عنوان العرض");return}
       if(v.l&&!okMap(v.l)){er("رابط الموقع خاصو يكون رابط Google Maps");return}
-      var send=function(url){api("/rest/v1/jobs","POST",{title:v.t,trade:v.tr,city:v.c,pay:v.p||null,phone:v.ph||"",description:v.d||null,urgent:v.u,location_url:v.l||null},{Prefer:"return=minimal"}).then(function(r){
+      var send=function(){api("/rest/v1/jobs","POST",{title:v.t,trade:v.tr,city:v.c,pay:v.p||null,phone:"",description:v.d||null,urgent:v.u,location_url:v.l||null},{Prefer:"return=minimal"}).then(function(r){
         if(r.ok){cl();toast("تم الإرسال ✅ غادي يبان العرض ملي نراجعوه ونوافقو عليه");if($("me").style.display==="block")loadMe()}
         else er("وقع مشكل فالنشر، عاود المحاولة")}).catch(function(){er("وقع مشكل فالنشر")})};
-      send(null)}},
+      send()}},
     {t:"إلغاء",c:"g",f:function(v,er,cl){cl()}}])}
 
 /* ---------- my account ---------- */
 var ST={new:"جديد",accepted:"✅ مقبول",rejected:"❌ مرفوض"};
 function loadMe(){
   var M=$("me");M.innerHTML="";M.appendChild(el("div","empty","...جاري التحميل"));
-  var jobQuery = S.user.email===ADMIN ? "/rest/v1/jobs?select=id,title,city,approved,created_at,phone,applications(id,experience,message,status,created_at)&order=created_at.desc" : "/rest/v1/jobs?select=id,title,city,approved,created_at,phone,applications(id,experience,message,status,created_at)&owner_id=eq."+S.user.id+"&order=created_at.desc";
   Promise.all([
-    api(jobQuery).then(function(r){if(!r.ok)throw 0;return r.json()}),
+    api("/rest/v1/jobs?select=id,title,city,approved,created_at,applications(id,name,phone,marital_status,birth_date,experience,message,status,created_at)&owner_id=eq."+S.user.id+"&order=created_at.desc").then(function(r){if(!r.ok)throw 0;return r.json()}),
     api("/rest/v1/applications?select=id,status,created_at,jobs(title,city)&applicant_id=eq."+S.user.id+"&order=created_at.desc").then(function(r){if(!r.ok)throw 0;return r.json()}),
     getProfile(),
     getEmployer()
@@ -279,11 +268,11 @@ function renderMe(mj,ma,pr,em){
   if(!mj.length)M.appendChild(el("div","empty","ما نشرتي حتى عرض"));
   mj.forEach(function(j){
     var d=el("div","job");d.appendChild(el("h3",0,j.title));
-    var g=el("div","tags");g.appendChild(el("span","tag"+(j.approved?"":" u"),j.approved?"منشور":"قيد المراجعة"));g.appendChild(el("span","tag","📍 "+j.city));g.appendChild(el("span","tag","🗓 "+fdate(j.created_at)));
-    if(S.user.email===ADMIN && j.phone)g.appendChild(el("span","tag","📞 هاتف المشغل: "+j.phone));
-    g.appendChild(el("span","tag","📨 "+j.applications.length+" طلب"));d.appendChild(g);
+    var g=el("div","tags");g.appendChild(el("span","tag"+(j.approved?"":" u"),j.approved?"منشور":"قيد المراجعة"));g.appendChild(el("span","tag","📍 "+j.city));g.appendChild(el("span","tag","🗓 "+fdate(j.created_at)));g.appendChild(el("span","tag","📨 "+j.applications.length+" طلب"));d.appendChild(g);
     j.applications.forEach(function(a){
-      var p=el("div","app");p.appendChild(el("b",0,"طلب خدمة · "+ST[a.status]));
+      var p=el("div","app");p.appendChild(el("b",0,a.name+" · "+ST[a.status]));
+      var t=el("div");var l=el("a",0,a.phone);l.href="tel:"+dg(a.phone);l.dir="ltr";t.appendChild(document.createTextNode("📞 "));t.appendChild(l);p.appendChild(t);
+      if(a.marital_status||a.birth_date)p.appendChild(el("div",0,"👤 "+(a.birth_date?age(a.birth_date)+" سنة · ":"")+(a.marital_status||"")+" · ✅ هوية مؤكدة"));
       if(a.experience)p.appendChild(el("div",0,"🛠 "+a.experience));
       if(a.message)p.appendChild(el("div",0,"💬 "+a.message));
       var r=el("div","row");
